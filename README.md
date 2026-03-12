@@ -1,5 +1,3 @@
-#Gabriel Souza leite
-
 # 🚗 Sistema de Locação de Veículos - Instalação e Uso
 
 ## Integração com MariaDB/MySQL
