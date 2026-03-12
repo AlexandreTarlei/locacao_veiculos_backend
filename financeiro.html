@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle Financeiro</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; }
+    h2 { margin-top: 0; }
+    label { display: inline-block; min-width: 100px; margin-bottom: 0.25rem; }
+    input, select, button { padding: 0.5rem; margin-bottom: 0.5rem; font-size: 1rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem 1rem; align-items: end; margin-bottom: 1rem; }
+    .form-grid label { min-width: 0; }
+    button { cursor: pointer; background: #0ea5e9; color: white; border: none; border-radius: 6px; padding: 0.5rem 1rem; }
+    button:hover { background: #0284c7; }
+    .btn-sec { background: #64748b; padding: 0.5rem 0.6rem; }
+    .btn-sec:hover { background: #475569; }
+    .select-com-add { display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap; }
+    .select-com-add select { flex: 1; min-width: 100px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #e2e8f0; padding: 0.5rem; text-align: left; }
+    th { background: #f1f5f9; }
+    tr:nth-child(even) { background: #f8fafc; }
+    .receita { color: #16a34a; }
+    .despesa { color: #dc2626; }
+    .erro { color: #dc2626; margin-top: 0.5rem; }
+    hr { margin: 1.5rem 0; border: none; border-top: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+  <h2>Controle Financeiro</h2>
+
+  <div class="form-grid">
+    <div>
+      <label for="descricao">Descrição</label>
+      <input type="text" id="descricao" placeholder="Descrição">
+    </div>
+    <div>
+      <label for="valor">Valor</label>
+      <input type="number" id="valor" placeholder="Valor" step="0.01" min="0">
+    </div>
+    <div>
+      <label for="data_lancamento">Data</label>
+      <input type="date" id="data_lancamento">
+    </div>
+    <div>
+      <label for="tipo">Tipo</label>
+      <select id="tipo">
+        <option value="receita">Entrada</option>
+        <option value="despesa">Saída</option>
+      </select>
+    </div>
+    <div>
+      <label for="plano_conta">Plano de conta</label>
+      <div class="select-com-add">
+        <select id="plano_conta"></select>
+        <input type="text" id="novo_plano_nome" placeholder="Novo plano..." style="max-width: 120px;">
+        <button type="button" onclick="adicionarPlanoConta()" class="btn-sec">+</button>
+      </div>
+    </div>
+    <div>
+      <label for="forma_pagamento">Forma pagamento</label>
+      <select id="forma_pagamento"></select>
+    </div>
+    <div>
+      <label for="pago">Status</label>
+      <select id="pago">
+        <option value="true">Pago</option>
+        <option value="false">Pendente</option>
+      </select>
+    </div>
+    <div>
+      <button type="button" onclick="salvar()">Salvar</button>
+    </div>
+  </div>
+  <div id="erro" class="erro"></div>
+
+  <hr>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Descrição</th>
+        <th>Plano</th>
+        <th>Forma</th>
+        <th>Valor</th>
+        <th>Tipo</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tabela_financeiro"></tbody>
+  </table>
+
+  <script>
+    const API_BASE = 'http://localhost:8000';
+
+    function hoje() {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+
+    document.getElementById('data_lancamento').value = hoje();
+
+    async function carregarSelects(selecionarPlanoId = null) {
+      const [planosRes, formasRes] = await Promise.all([
+        fetch(API_BASE + '/plano-contas/'),
+        fetch(API_BASE + '/formas-pagamento/')
+      ]);
+
+      const planos = planosRes.ok ? await planosRes.json() : [];
+      const formas = formasRes.ok ? await formasRes.json() : [];
+
+      const selPlano = document.getElementById('plano_conta');
+      const selForma = document.getElementById('forma_pagamento');
+
+      selPlano.innerHTML = '<option value="">-- Selecione --</option>' +
+        planos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+      if (selecionarPlanoId) selPlano.value = selecionarPlanoId;
+
+      selForma.innerHTML = '<option value="">-- Selecione --</option>' +
+        formas.filter(f => f.ativa).map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
+    }
+
+    async function adicionarPlanoConta() {
+      const input = document.getElementById('novo_plano_nome');
+      const nome = input.value.trim();
+      const erroEl = document.getElementById('erro');
+      erroEl.textContent = '';
+      if (!nome) {
+        erroEl.textContent = 'Digite o nome do plano de conta.';
+        return;
+      }
+      try {
+        const res = await fetch(API_BASE + '/plano-contas/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || res.statusText);
+        input.value = '';
+        await carregarSelects(data.id);
+      } catch (e) {
+        erroEl.textContent = 'Plano de conta: ' + e.message;
+      }
+    }
+
+    async function carregarTabela() {
+      const tbody = document.getElementById('tabela_financeiro');
+      try {
+        const res = await fetch(API_BASE + '/financeiro');
+        const dados = res.ok ? await res.json() : [];
+        if (!res.ok) throw new Error(dados.detail || res.statusText);
+
+        tbody.innerHTML = dados.length === 0
+          ? '<tr><td colspan="7">Nenhum lançamento.</td></tr>'
+          : dados.map(l => `
+              <tr>
+                <td>${formatarData(l.data_lancamento)}</td>
+                <td>${escapeHtml(l.descricao)}</td>
+                <td>${escapeHtml(l.plano_conta || '-')}</td>
+                <td>${escapeHtml(l.forma_pagamento || '-')}</td>
+                <td class="${l.tipo === 'receita' ? 'receita' : 'despesa'}">R$ ${formatarValor(l.valor)}</td>
+                <td>${l.tipo === 'receita' ? 'Entrada' : 'Saída'}</td>
+                <td>${l.pago ? 'Pago' : 'Pendente'}</td>
+              </tr>
+            `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7" class="erro">Erro ao carregar: ' + escapeHtml(e.message) + '</td></tr>';
+      }
+    }
+
+    function formatarData(str) {
+      if (!str) return '-';
+      const d = new Date(str + 'T12:00:00');
+      return d.toLocaleDateString('pt-BR');
+    }
+
+    function formatarValor(n) {
+      return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    async function salvar() {
+      const erroEl = document.getElementById('erro');
+      erroEl.textContent = '';
+
+      const descricao = document.getElementById('descricao').value.trim();
+      const valor = document.getElementById('valor').value;
+      const data_lancamento = document.getElementById('data_lancamento').value;
+      const tipo = document.getElementById('tipo').value;
+      const plano_conta_id = parseInt(document.getElementById('plano_conta').value, 10);
+      const forma_pagamento_id = parseInt(document.getElementById('forma_pagamento').value, 10);
+      const pago = document.getElementById('pago').value === 'true';
+
+      if (!descricao) {
+        erroEl.textContent = 'Informe a descrição.';
+        return;
+      }
+      if (!valor || Number(valor) <= 0) {
+        erroEl.textContent = 'Informe um valor válido.';
+        return;
+      }
+      if (!data_lancamento) {
+        erroEl.textContent = 'Informe a data.';
+        return;
+      }
+      if (!plano_conta_id) {
+        erroEl.textContent = 'Selecione o plano de conta.';
+        return;
+      }
+      if (!forma_pagamento_id) {
+        erroEl.textContent = 'Selecione a forma de pagamento.';
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + '/financeiro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            descricao,
+            valor: Number(valor),
+            data_lancamento,
+            tipo,
+            plano_conta_id,
+            forma_pagamento_id,
+            pago
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || res.statusText);
+
+        document.getElementById('descricao').value = '';
+        document.getElementById('valor').value = '';
+        document.getElementById('data_lancamento').value = hoje();
+        carregarTabela();
+      } catch (e) {
+        erroEl.textContent = 'Erro ao salvar: ' + e.message;
+      }
+    }
+
+    async function init() {
+      await carregarSelects();
+      await carregarTabela();
+    }
+    init();
+  </script>
+</body>
+</html>

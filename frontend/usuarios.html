@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; }
+    nav { margin-bottom: 1rem; }
+    nav a { margin-right: 1rem; color: #0ea5e9; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    h2 { margin-top: 0; }
+    label { display: inline-block; min-width: 120px; margin-bottom: 0.25rem; }
+    input, select, button { padding: 0.5rem; margin-bottom: 0.5rem; font-size: 1rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem 1rem; align-items: end; margin-bottom: 1rem; }
+    .form-grid label { min-width: 0; }
+    button { cursor: pointer; background: #0ea5e9; color: white; border: none; border-radius: 6px; padding: 0.5rem 1rem; }
+    button:hover { background: #0284c7; }
+    .btn-sec { background: #64748b; }
+    .btn-danger { background: #dc2626; }
+    .btn-danger:hover { background: #b91c1c; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #e2e8f0; padding: 0.5rem; text-align: left; }
+    th { background: #f1f5f9; }
+    tr:nth-child(even) { background: #f8fafc; }
+    .erro { color: #dc2626; margin-top: 0.5rem; }
+    .inativo { color: #94a3b8; }
+    #senha_hint { font-size: 0.85rem; color: #64748b; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="login.html">Login</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="financeiro.html">Financeiro</a>
+    <a href="locacoes.html">Locações</a>
+    <a href="reservas.html">Reservas</a>
+    <a href="clientes.html">Clientes</a>
+    <a href="usuarios.html">Usuários</a>
+    <a href="relatorios.html">Relatórios</a>
+  </nav>
+  <h2>Usuários</h2>
+  <p>Cadastro e edição de usuários. Selecione o tipo para definir o nível de acesso.</p>
+
+  <div class="form-grid">
+    <div>
+      <label for="nome">Nome</label>
+      <input type="text" id="nome" placeholder="Nome do usuário">
+    </div>
+    <div>
+      <label for="email">E-mail</label>
+      <input type="email" id="email" placeholder="email@exemplo.com" required>
+    </div>
+    <div>
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" placeholder="Deixe em branco para não alterar">
+      <div id="senha_hint">Obrigatória ao criar novo usuário.</div>
+    </div>
+    <div>
+      <label for="tipo_usuario">Tipo</label>
+      <select id="tipo_usuario">
+        <option value="">-- Selecione --</option>
+      </select>
+    </div>
+    <div>
+      <label><input type="checkbox" id="ativo" checked> Ativo</label>
+    </div>
+    <div>
+      <button type="button" id="btn_salvar" onclick="salvar()">Salvar</button>
+      <button type="button" class="btn-sec" id="btn_cancelar" onclick="limparForm()" style="display:none;">Cancelar</button>
+    </div>
+  </div>
+  <div id="erro" class="erro"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>E-mail</th>
+        <th>Tipo</th>
+        <th>Ativo</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tabela_usuarios"></tbody>
+  </table>
+
+  <script src="js/api.js"></script>
+  <script>
+    var idEditando = null;
+
+    function mostrarErro(msg) {
+      var el = document.getElementById('erro');
+      if (el) el.textContent = msg || '';
+    }
+
+    function carregarTipos() {
+      return getJson('/tipo-usuario/').then(function (tipos) {
+        var sel = document.getElementById('tipo_usuario');
+        sel.innerHTML = '<option value="">-- Selecione --</option>' +
+          (tipos || []).map(function (t) {
+            return '<option value="' + t.id + '">' + (t.nome || t.codigo) + '</option>';
+          }).join('');
+      });
+    }
+
+    function carregarUsuarios() {
+      return getJson('/usuarios/').then(function (lista) {
+        var tbody = document.getElementById('tabela_usuarios');
+        if (!lista || lista.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6">Nenhum usuário cadastrado.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = lista.map(function (u) {
+          var ativo = u.ativo ? 'Sim' : 'Não';
+          var cls = u.ativo ? '' : ' class="inativo"';
+          return '<tr' + cls + '>' +
+            '<td>' + u.id + '</td>' +
+            '<td>' + (u.nome || '-') + '</td>' +
+            '<td>' + (u.email || '-') + '</td>' +
+            '<td>' + (u.tipo_nome || u.nivel || '-') + '</td>' +
+            '<td>' + ativo + '</td>' +
+            '<td><button type="button" class="btn-sec" onclick="editar(' + u.id + ')">Editar</button> ' +
+            '<button type="button" class="btn-danger" onclick="excluir(' + u.id + ', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Excluir</button></td>' +
+            '</tr>';
+        }).join('');
+      });
+    }
+
+    function limparForm() {
+      idEditando = null;
+      document.getElementById('nome').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('senha').value = '';
+      document.getElementById('senha').placeholder = 'Obrigatória ao criar';
+      document.getElementById('tipo_usuario').value = '';
+      document.getElementById('ativo').checked = true;
+      document.getElementById('btn_cancelar').style.display = 'none';
+      document.getElementById('senha_hint').textContent = 'Obrigatória ao criar novo usuário.';
+      mostrarErro('');
+    }
+
+    function editar(id) {
+      getJson('/usuarios/' + id).then(function (u) {
+        idEditando = id;
+        document.getElementById('nome').value = u.nome || '';
+        document.getElementById('email').value = u.email || '';
+        document.getElementById('senha').value = '';
+        document.getElementById('senha').placeholder = 'Deixe em branco para não alterar';
+        document.getElementById('tipo_usuario').value = u.id_tipo_usuario || '';
+        document.getElementById('ativo').checked = u.ativo !== false;
+        document.getElementById('btn_cancelar').style.display = 'inline-block';
+        document.getElementById('senha_hint').textContent = 'Deixe em branco para não alterar a senha.';
+        mostrarErro('');
+      }).catch(function (e) {
+        mostrarErro(e.message);
+      });
+    }
+
+    function salvar() {
+      var nome = document.getElementById('nome').value.trim();
+      var email = document.getElementById('email').value.trim();
+      var senha = document.getElementById('senha').value;
+      var idTipo = document.getElementById('tipo_usuario').value;
+      var ativo = document.getElementById('ativo').checked;
+
+      mostrarErro('');
+      if (!email) {
+        mostrarErro('E-mail é obrigatório.');
+        return;
+      }
+      if (!idEditando && !senha) {
+        mostrarErro('Senha é obrigatória ao criar usuário.');
+        return;
+      }
+
+      var payload = {
+        nome: nome || null,
+        email: email,
+        id_tipo_usuario: idTipo ? parseInt(idTipo, 10) : null,
+        ativo: ativo
+      };
+      if (idEditando) {
+        if (senha) payload.senha = senha;
+        putJson('/usuarios/' + idEditando, payload)
+          .then(function () {
+            limparForm();
+            carregarUsuarios();
+          })
+          .catch(function (e) {
+            mostrarErro(e.message);
+          });
+      } else {
+        payload.senha = senha;
+        postJson('/usuarios/', payload)
+          .then(function () {
+            limparForm();
+            carregarUsuarios();
+          })
+          .catch(function (e) {
+            mostrarErro(e.message);
+          });
+      }
+    }
+
+    function excluir(id, email) {
+      if (!confirm('Excluir o usuário "' + email + '"?')) return;
+      deleteApi('/usuarios/' + id)
+        .then(function () {
+          if (idEditando === id) limparForm();
+          carregarUsuarios();
+        })
+        .catch(function (e) {
+          mostrarErro(e.message);
+        });
+    }
+
+    carregarTipos()
+      .then(carregarUsuarios)
+      .catch(function (e) {
+        mostrarErro(e.message);
+      });
+  </script>
+</body>
+</html>

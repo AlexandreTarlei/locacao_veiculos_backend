@@ -1,0 +1,2504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="description" content="Sistema profissional de gestão de locação de veículos — veículos, clientes, contratos e pagamentos.">
+    <title>Sistema de Locação de Veículos | Gestão Profissional</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0f14;
+            --surface: #151922;
+            --surface-hover: #1c2129;
+            --border: #252b36;
+            --text: #f0f2f5;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --primary: #0ea5e9;
+            --primary-hover: #0284c7;
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.12);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.12);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.12);
+            --sidebar-width: 260px;
+            --header-height: 64px;
+            --radius: 10px;
+            --radius-sm: 6px;
+            --shadow: 0 4px 24px rgba(0,0,0,.25);
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            min-height: 100vh;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+        .sidebar-brand {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-brand h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        .sidebar-brand span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0.75rem;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border: none;
+            background: none;
+            width: 100%;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            text-align: left;
+            margin-bottom: 2px;
+        }
+        .nav-item:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        .nav-item.ativo {
+            background: rgba(14, 165, 233, 0.12);
+            color: var(--primary);
+        }
+        .nav-item svg { flex-shrink: 0; opacity: 0.9; }
+        .main-wrap {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            height: var(--header-height);
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+        .header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text);
+        }
+        .content {
+            flex: 1;
+            padding: 1.75rem 2rem;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        /* Dashboard cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            transition: border-color .2s;
+        }
+        .stat-card:hover { border-color: var(--primary); }
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+        }
+        .stat-card .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        /* Cards de seção */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-header h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-header h3 svg { opacity: 0.8; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        .form-grid .full { grid-column: 1 / -1; }
+        .field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.6rem 0.85rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            transition: border-color .2s;
+        }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.15rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background .2s, transform .05s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:hover { filter: brightness(1.1); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { filter: brightness(1.1); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+        .btn-sm { padding: 0.4rem 0.85rem; font-size: 0.85rem; }
+        .acoes { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+        /* Tabelas */
+        .table-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: var(--surface-hover);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,.02); }
+        .linha-acoes { white-space: nowrap; }
+        .linha-acoes .btn { margin-right: 0.35rem; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-warning { background: var(--warning-bg); color: var(--warning); }
+        .badge-muted { background: rgba(107, 114, 128, 0.2); color: var(--text-muted); }
+        .badge-manutencao { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: calc(var(--header-height) + 1rem);
+            right: 1.5rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 380px;
+        }
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            animation: toastIn .3s ease;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.warning { border-left: 4px solid var(--warning); }
+        .toast p { margin: 0; font-size: 0.9rem; color: var(--text); }
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+        }
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+        .empty-state p { margin: 0; font-size: 0.95rem; }
+        /* Impressão de relatórios */
+        @media print {
+            .sidebar, .header, .header-actions, .backend-status, .toast-container, .modal-overlay,
+            .nav-item, .btn, .relatorios-grid, .relatorio-card { display: none !important; }
+            .main-wrap { margin-left: 0 !important; }
+            .content { max-width: 100% !important; }
+            .painel { display: none !important; }
+            .painel.ativo { display: block !important; }
+            #painel-relatorios .card:first-of-type { display: none !important; }
+            #areaImpressaoRelatorio { display: block !important; }
+            body { background: #fff; color: #111; }
+            .card { border: 1px solid #ddd; box-shadow: none; }
+        }
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            padding: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .2s, visibility .2s;
+        }
+        .modal-overlay.ativo {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            transform: scale(0.95);
+            transition: transform .2s;
+        }
+        .modal-overlay.ativo .modal { transform: scale(1); }
+        .modal h4 { margin: 0 0 0.75rem; font-size: 1.1rem; }
+        .modal p { margin: 0 0 1.25rem; color: var(--text-secondary); font-size: 0.95rem; }
+        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+        .modal.modal--wide { max-width: 480px; }
+        .modal .form-grid { margin-bottom: 1rem; }
+        .modal .form-grid .field { margin-bottom: 0.5rem; }
+        .modal .campo-somente-leitura { background: var(--bg); color: var(--text-muted); cursor: not-allowed; }
+        .endereco-secao { margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .endereco-titulo { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.75rem; }
+        .endereco-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .endereco-cep { flex: 0 0 140px; margin: 0; }
+        .endereco-cep input { width: 100%; }
+        .status-cep { font-size: 0.8rem; color: var(--text-muted); }
+        .status-cep.ok { color: var(--success); }
+        .status-cep.erro { color: var(--danger); }
+        .endereco-grid { margin-top: 0.5rem; }
+        .field-numero { max-width: 100px; }
+        .field-uf { max-width: 70px; }
+        .texto-ajuda { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1rem; }
+        .resumo-manutencao { margin-top: 1rem; padding: 1rem; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.95rem; }
+        .resumo-manutencao strong { color: var(--primary); }
+        .veiculo-foto { width: 56px; height: 42px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-hover); }
+        .veiculo-foto-placeholder { width: 56px; height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-hover); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.7rem; text-align: center; padding: 2px; }
+        .fotos-veiculo-lista { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
+        .carousel-veiculo-foto { display: flex; align-items: center; gap: 0.35rem; min-width: 140px; }
+        .carousel-veiculo-foto .carousel-img-wrap { width: 80px; height: 60px; border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; background: var(--surface-hover); flex-shrink: 0; position: relative; }
+        .carousel-veiculo-foto .carousel-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .carousel-veiculo-foto .carousel-nav { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+        .carousel-veiculo-foto .carousel-nav button { width: 28px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); border-radius: var(--radius-sm); cursor: pointer; font-size: 1rem; line-height: 1; transition: background 0.15s, color 0.15s; }
+        .carousel-veiculo-foto .carousel-nav button:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .carousel-veiculo-foto .carousel-nav .carousel-num { font-size: 0.7rem; color: var(--text-muted); }
+        .foto-mini-wrap { position: relative; flex-shrink: 0; }
+        .foto-mini-wrap .btn-remover-foto { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; padding: 0; font-size: 12px; line-height: 1; border-radius: 50%; opacity: 0.9; }
+        .galeria-cadastro { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+        .galeria-cadastro .slot { width: 80px; height: 60px; border-radius: var(--radius-sm); border: 1px dashed var(--border); overflow: hidden; position: relative; background: var(--bg); }
+        .galeria-cadastro .slot img { width: 100%; height: 100%; object-fit: cover; }
+        .galeria-cadastro .slot .remover { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; padding: 0; font-size: 11px; border-radius: 50%; }
+        .linha-gasto { font-size: 0.85rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+        .linha-gasto:last-child { border-bottom: none; }
+        .registros-gasto { max-width: 320px; }
+        #statusCep { font-size: 0.8rem; }
+        .backend-status {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-weight: 500;
+        }
+        .backend-status.online { background: var(--success-bg); color: var(--success); }
+        .backend-status.offline { background: rgba(107,114,128,0.2); color: var(--text-muted); }
+        .backend-status.loading { color: var(--text-muted); }
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .painel { display: none; animation: fadeIn .2s ease; }
+        .painel.ativo { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Responsivo */
+        .dashboard-graficos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .grafico-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+        .grafico-titulo {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            margin: 0 0 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .grafico-wrap {
+            position: relative;
+            height: 240px;
+        }
+        .grafico-wrap canvas { max-height: 240px; }
+        @media (max-width: 900px) {
+            .dashboard-graficos { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { width: 72px; padding: 0.5rem; }
+            .sidebar-brand h1, .sidebar-brand span, .nav-item span { display: none; }
+            .nav-item { justify-content: center; padding: 0.85rem; }
+            .main-wrap { margin-left: 72px; }
+            .header, .content { padding-left: 1rem; padding-right: 1rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h1>Locadora</h1>
+                <span>Sistema de Gestão</span>
+            </div>
+            <nav class="sidebar-nav">
+                <button type="button" class="nav-item ativo" data-painel="dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>Dashboard</span>
+                </button>
+                <button type="button" class="nav-item" data-painel="veiculos">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H8.24a1 1 0 0 0-.8.4L5 11l-5.16.86a1 1 0 0 0-.84.99V16h3"/><circle cx="7.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+                    <span>Veículos</span>
+                </button>
+                <button type="button" class="nav-item" data-painel="clientes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Clientes</span>
+                </button>
+                <button type="button" class="nav-item" data-painel="locacoes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>Locações</span>
+                </button>
+                <button type="button" class="nav-item" data-painel="formas-pagamento">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    <span>Formas de Pagamento</span>
+                </button>
+                <button type="button" class="nav-item" data-painel="controle-financeiro">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    <span>Controle Financeiro</span>
+                </button>
+                <button type="button" class="nav-item" data-painel="relatorios">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <span>Relatórios</span>
+                </button>
+            </nav>
+        </aside>
+
+        <div class="main-wrap">
+            <header class="header">
+                <h2 id="tituloPainel">Dashboard</h2>
+                <div class="header-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" id="btnAtualizarDados" title="Recarregar veículos, clientes, locações e estatísticas do servidor">Atualizar dados</button>
+                    <div id="backendStatus" class="backend-status"></div>
+                </div>
+            </header>
+
+            <main class="content">
+                <!-- PAINEL DASHBOARD -->
+                <section id="painel-dashboard" class="painel ativo">
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="label">Veículos</div>
+                            <div class="value" id="statVeiculos">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">Disponíveis</div>
+                            <div class="value" id="statDisponiveis">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">Clientes</div>
+                            <div class="value" id="statClientes">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">Locações ativas</div>
+                            <div class="value" id="statLocacoes">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">Em manutenção</div>
+                            <div class="value" id="statManutencao">0</div>
+                        </div>
+                    </div>
+                    <div class="dashboard-graficos">
+                        <div class="grafico-card">
+                            <h3 class="grafico-titulo">Status da frota</h3>
+                            <div class="grafico-wrap"><canvas id="chartFrota"></canvas></div>
+                        </div>
+                        <div class="grafico-card">
+                            <h3 class="grafico-titulo">Locações</h3>
+                            <div class="grafico-wrap"><canvas id="chartLocacoes"></canvas></div>
+                        </div>
+                        <div class="grafico-card">
+                            <h3 class="grafico-titulo">Gastos em manutenção por veículo</h3>
+                            <div class="grafico-wrap"><canvas id="chartManutencao"></canvas></div>
+                        </div>
+                        <div class="grafico-card">
+                            <h3 class="grafico-titulo">Faturamento (pagamentos recebidos)</h3>
+                            <div class="grafico-wrap"><canvas id="chartFaturamento"></canvas></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PAINEL VEÍCULOS -->
+                <section id="painel-veiculos" class="painel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Cadastrar veículo</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field"><label>Placa</label><input id="vPlaca" placeholder="ABC1D23" maxlength="7"></div>
+                            <div class="field field-marca">
+                                <label>Marca</label>
+                                <input id="vMarca" list="listaMarcas" placeholder="Selecione ou digite a marca" autocomplete="off">
+                                <datalist id="listaMarcas"></datalist>
+                            </div>
+                            <div class="field"><label>Modelo</label><input id="vModelo" placeholder="Ex: Corolla, Onix, HB20"></div>
+                            <div class="field"><label>Ano</label><input id="vAno" type="number" placeholder="2024" min="1990" max="2030"></div>
+                            <div class="field">
+                                <label>Cor</label>
+                                <input id="vCor" list="listaCores" placeholder="Cor">
+                                <datalist id="listaCores"></datalist>
+                            </div>
+                            <div class="field"><label>Valor diária (R$)</label><input id="vValor" type="number" step="0.01" placeholder="150,00"></div>
+                            <div class="field"><label>Quilometragem (km)</label><input id="vKm" type="number" step="0.01" placeholder="15000"></div>
+                            <div class="field full campo-imagem-veiculo">
+                                <label>Imagens do veículo (até 6, opcional)</label>
+                                <p class="texto-ajuda" style="margin:0 0 0.5rem;">Envie até 6 fotos. Use o botão para arquivos ou cole uma URL e clique em Adicionar URL.</p>
+                                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+                                    <input id="vFoto" type="text" placeholder="URL da imagem" style="flex:1;min-width:180px;">
+                                    <button type="button" class="btn btn-ghost btn-sm" id="vFotoAddUrl">Adicionar URL</button>
+                                    <label class="btn btn-ghost btn-sm" style="margin:0;cursor:pointer;">
+                                        Enviar arquivos (até 6)
+                                        <input type="file" id="vFotoFile" accept="image/*" multiple style="position:absolute;width:0.1px;height:0.1px;opacity:0;overflow:hidden;">
+                                    </label>
+                                </div>
+                                <div id="vFotoPreview" class="galeria-cadastro"></div>
+                                <span class="texto-ajuda" id="vFotoFileName"></span>
+                            </div>
+                            <div class="full acoes">
+                                <button type="button" class="btn btn-primary" id="btnAddVeiculo">Adicionar veículo</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H8.24a1 1 0 0 0-.8.4L5 11l-5.16.86a1 1 0 0 0-.84.99V16h3"/></svg> Frota</h3>
+                            <button type="button" class="btn btn-ghost btn-sm" id="btnImportarVeiculos" title="Carregar veículos já cadastrados no banco de dados">Importar do banco</button>
+                        </div>
+                        <div id="listaVeiculos"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Veículos em manutenção</h3>
+                        </div>
+                        <p class="texto-ajuda">Inclua veículos em manutenção, lance gastos e atualize ou exclua registros. Tudo é salvo automaticamente.</p>
+                        <div class="form-grid" style="margin-bottom:1rem;">
+                            <div class="field"><label>Veículo (placa)</label><input id="manPlaca" placeholder="Placa do veículo"></div>
+                            <div class="field"><label>Data</label><input id="manData" type="date"></div>
+                            <div class="field"><label>Descrição</label><input id="manDesc" placeholder="Ex: Troca de óleo, freios"></div>
+                            <div class="field"><label>Valor gasto (R$)</label><input id="manValor" type="number" step="0.01" placeholder="0,00"></div>
+                            <div class="acoes" style="align-items:flex-end;">
+                                <button type="button" class="btn btn-primary" id="btnLancarManutencao">Lançar gasto</button>
+                                <button type="button" class="btn btn-ghost" id="btnEnviarManutencao">Enviar para manutenção (sem gasto)</button>
+                            </div>
+                        </div>
+                        <div id="listaManutencoes"></div>
+                        <div id="resumoManutencao" class="resumo-manutencao"></div>
+                    </div>
+                </section>
+
+                <!-- PAINEL CLIENTES -->
+                <section id="painel-clientes" class="painel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg> Novo cliente</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field full"><label>Nome completo</label><input id="cNome" placeholder="Nome do cliente"></div>
+                            <div class="field"><label>CPF</label><input id="cCpf" placeholder="000.000.000-00" maxlength="14"></div>
+                            <div class="field"><label>Telefone</label><input id="cTelefone" placeholder="(11) 98765-4321"></div>
+                            <div class="field"><label>E-mail</label><input id="cEmail" type="email" placeholder="email@exemplo.com"></div>
+                            <div class="field"><label>Data de nascimento</label><input id="cDataNasc" type="date"></div>
+                            <div class="full endereco-secao">
+                                <label class="endereco-titulo">Endereço</label>
+                                <div class="endereco-linha">
+                                    <div class="field endereco-cep">
+                                        <input id="cCep" placeholder="CEP" maxlength="9">
+                                    </div>
+                                    <button type="button" class="btn btn-ghost btn-sm" id="btnBuscarCep">Buscar CEP</button>
+                                    <span id="statusCep" class="status-cep"></span>
+                                </div>
+                                <div class="form-grid endereco-grid">
+                                    <div class="field"><label>Logradouro</label><input id="cLogradouro" placeholder="Rua, avenida..."></div>
+                                    <div class="field field-numero"><label>Número</label><input id="cNumero" placeholder="Nº"></div>
+                                    <div class="field"><label>Complemento</label><input id="cComplemento" placeholder="Apto, bloco..."></div>
+                                    <div class="field"><label>Bairro</label><input id="cBairro" placeholder="Bairro"></div>
+                                    <div class="field"><label>Cidade</label><input id="cCidade" placeholder="Cidade"></div>
+                                    <div class="field field-uf"><label>UF</label><input id="cUf" placeholder="UF" maxlength="2"></div>
+                                </div>
+                            </div>
+                            <div class="full acoes">
+                                <button type="button" class="btn btn-primary" id="btnAddCliente">Cadastrar cliente</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Visualizar clientes cadastrados</h3>
+                            <button type="button" class="btn btn-ghost btn-sm" id="btnImportarClientes" title="Carregar clientes já cadastrados no banco de dados">Importar do banco</button>
+                        </div>
+                        <p class="texto-ajuda" style="margin:0.25rem 0 0 0;">Total: <strong id="totalClientesCadastrados">0</strong> cliente(s)</p>
+                        <div id="listaClientes"></div>
+                    </div>
+                </section>
+
+                <!-- PAINEL LOCAÇÕES -->
+                <section id="painel-locacoes" class="painel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova locação</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field"><label>CPF do cliente</label><input id="locCpf" placeholder="CPF"></div>
+                            <div class="field"><label>Placa do veículo</label><input id="locPlaca" placeholder="ABC1D23"></div>
+                            <div class="field"><label>Quantidade de dias</label><input id="locDias" type="number" min="1" placeholder="5"></div>
+                            <div class="field full"><label>Observações</label><input id="locObservacoes" placeholder="Opcional"></div>
+                            <div class="full acoes">
+                                <button type="button" class="btn btn-primary" id="btnCriarLocacao">Criar locação</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg> Locações ativas</h3>
+                        </div>
+                        <div id="listaLocacoesAtivas"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Registrar pagamento</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field"><label>ID da locação</label><input id="pagIdLoc" type="number" placeholder="1"></div>
+                            <div class="field"><label>Forma de pagamento</label><select id="pagForma"></select></div>
+                            <div class="field"><label>Valor (R$)</label><input id="pagValor" type="number" step="0.01" placeholder="0,00"></div>
+                            <div class="field"><label>Comprovante</label><input id="pagComprovante" placeholder="Nº comprovante"></div>
+                            <div class="field full"><label>Observações</label><input id="pagObservacoes" placeholder="Opcional"></div>
+                            <div class="full acoes">
+                                <button type="button" class="btn btn-success" id="btnRegistrarPagamento">Registrar pagamento</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Histórico</h3>
+                        </div>
+                        <div id="historicoLocacoes"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pagamentos registrados (dados do banco)</h3>
+                        </div>
+                        <div id="listaPagamentosRegistrados"></div>
+                    </div>
+                </section>
+
+                <!-- PAINEL FORMAS DE PAGAMENTO -->
+                <section id="painel-formas-pagamento" class="painel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova forma de pagamento</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field"><label>Nome</label><input id="fpNome" placeholder="Ex: PIX, Cartão"></div>
+                            <div class="field"><label>Descrição</label><input id="fpDesc" placeholder="Opcional"></div>
+                            <div class="full acoes">
+                                <button type="button" class="btn btn-primary" id="btnAddFormaPagamento">Adicionar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/></svg> Formas cadastradas</h3>
+                        </div>
+                        <div id="listaFormasPagamento"></div>
+                    </div>
+                </section>
+
+                <!-- PAINEL CONTROLE FINANCEIRO -->
+                <section id="painel-controle-financeiro" class="painel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Resumo financeiro</h3>
+                        </div>
+                        <div class="stats-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                            <div class="stat-card">
+                                <div class="label">Saldo (pagos)</div>
+                                <div class="value" id="finSaldo">R$ 0,00</div>
+                            </div>
+                        </div>
+                        <div class="grafico-wrap" style="height:220px;"><canvas id="chartFinanceiroMensal"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Plano de contas</h3>
+                        </div>
+                        <div class="form-grid" style="margin-bottom:1rem;">
+                            <div class="field"><label>Nova conta</label><input id="finPlanoNome" placeholder="Ex: Vendas, Combustível"></div>
+                            <div class="field" style="align-self:flex-end;"><button type="button" class="btn btn-primary" id="btnAddPlanoConta">Adicionar</button></div>
+                        </div>
+                        <div id="listaPlanoContas" class="table-wrap"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Novo lançamento</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field full"><label>Descrição</label><input id="finDesc" placeholder="Ex: Aluguel recebido, Combustível"></div>
+                            <div class="field"><label>Valor (R$)</label><input id="finValor" type="number" step="0.01" placeholder="0,00"></div>
+                            <div class="field"><label>Data</label><input id="finData" type="date"></div>
+                            <div class="field"><label>Tipo</label><select id="finTipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div>
+                            <div class="field"><label>Plano de conta</label><select id="finPlanoConta"></select></div>
+                            <div class="field"><label>Forma pagamento</label><select id="finFormaPagamento"></select></div>
+                            <div class="field" style="display:flex;align-items:center;gap:0.5rem;"><label style="margin:0;"><input type="checkbox" id="finPago"> Pago</label></div>
+                            <div class="field full"><button type="button" class="btn btn-primary" id="btnAddLancamento">Registrar lançamento</button></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Lançamentos</h3>
+                        </div>
+                        <div class="form-grid" style="margin-bottom:1rem;">
+                            <div class="field"><label>Tipo</label><select id="finFiltroTipo"><option value="">Todos</option><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div>
+                            <div class="field"><label>Pago</label><select id="finFiltroPago"><option value="">Todos</option><option value="true">Sim</option><option value="false">Não</option></select></div>
+                            <div class="field"><label>Data início</label><input id="finFiltroInicio" type="date"></div>
+                            <div class="field"><label>Data fim</label><input id="finFiltroFim" type="date"></div>
+                            <div class="field" style="align-self:flex-end;"><button type="button" class="btn btn-ghost" id="btnFiltrarLancamentos">Filtrar</button></div>
+                        </div>
+                        <div id="listaLancamentos" class="table-wrap"></div>
+                    </div>
+                </section>
+
+                <!-- PAINEL RELATÓRIOS -->
+                <section id="painel-relatorios" class="painel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Relatórios e impressão</h3>
+                        </div>
+                        <p style="color:var(--text-secondary);margin:0 0 1.5rem;">Gere relatórios em PDF e imprima a visão geral do sistema. Requer backend conectado.</p>
+                        <div class="relatorios-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:1rem;">
+                            <div class="relatorio-card" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
+                                <h4 style="margin:0 0 0.5rem;font-size:1rem;">Relatório financeiro mensal</h4>
+                                <p style="margin:0 0 1rem;font-size:0.85rem;color:var(--text-muted);">Lançamentos do mês atual (receitas e despesas).</p>
+                                <a href="#" class="btn btn-primary" id="btnPdfMensal" target="_blank" rel="noopener" style="text-decoration:none;">Baixar PDF</a>
+                            </div>
+                            <div class="relatorio-card" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
+                                <h4 style="margin:0 0 0.5rem;font-size:1rem;">Contas vencidas</h4>
+                                <p style="margin:0 0 1rem;font-size:0.85rem;color:var(--text-muted);">Lista de contas não pagas com vencimento anterior a hoje.</p>
+                                <a href="#" class="btn btn-primary" id="btnPdfVencidas" target="_blank" rel="noopener" style="text-decoration:none;">Baixar PDF</a>
+                            </div>
+                            <div class="relatorio-card" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
+                                <h4 style="margin:0 0 0.5rem;font-size:1rem;">Relatório geral do sistema</h4>
+                                <p style="margin:0 0 1rem;font-size:0.85rem;color:var(--text-muted);">Estatísticas gerais e resumo financeiro consolidado.</p>
+                                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                                    <a href="#" class="btn btn-primary" id="btnPdfSistema" target="_blank" rel="noopener" style="text-decoration:none;">Baixar PDF</a>
+                                    <button type="button" class="btn btn-ghost" id="btnImprimirSistema">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card area-impressao-relatorio" id="areaImpressaoRelatorio" style="display:none;">
+                        <div class="card-header">
+                            <h3>Resumo para impressão</h3>
+                        </div>
+                        <div id="conteudoImpressaoRelatorio"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="modal-overlay" id="modalConfirm">
+        <div class="modal">
+            <h4 id="modalTitulo">Confirmar</h4>
+            <p id="modalTexto"></p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" id="modalCancelar">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="modalConfirmar">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalVerCliente">
+        <div class="modal modal--wide">
+            <h4>Dados do cliente</h4>
+            <div id="modalVerClienteConteudo" style="margin-top:1rem;font-size:0.95rem;"></div>
+            <div class="modal-actions" style="margin-top:1.5rem;">
+                <button type="button" class="btn btn-ghost" id="modalVerClienteFechar">Fechar</button>
+                <button type="button" class="btn btn-primary" id="modalVerClienteEditar">Editar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalEditarVeiculo">
+        <div class="modal modal--wide">
+            <h4>Editar veículo</h4>
+            <p class="texto-ajuda" style="margin-bottom:1rem;">Altere status, valor da diária, quilometragem e foto. As alterações são salvas no banco quando o backend está conectado.</p>
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Placa</label>
+                    <input type="text" id="editVPlaca" class="campo-somente-leitura" readonly>
+                </div>
+                <div class="field full">
+                    <label>Status do veículo</label>
+                    <select id="editVStatus">
+                        <option value="disponivel">Disponível</option>
+                        <option value="alugado">Alugado</option>
+                        <option value="manutencao">Em manutenção</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Valor da diária (R$)</label>
+                    <input type="number" id="editVValor" step="0.01" placeholder="0,00">
+                </div>
+                <div class="field">
+                    <label>Quilometragem (km)</label>
+                    <input type="number" id="editVKm" step="0.01" placeholder="0">
+                </div>
+                <div class="field full">
+                    <label>Imagens do veículo (até 6)</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+                        <input type="text" id="editVFoto" placeholder="URL da imagem" style="flex:1;min-width:160px;">
+                        <button type="button" class="btn btn-ghost btn-sm" id="editVFotoAddUrl">Adicionar URL</button>
+                        <label class="btn btn-ghost btn-sm" style="margin:0;cursor:pointer;">
+                            Enviar arquivos
+                            <input type="file" id="editVFotoFile" accept="image/*" multiple style="position:absolute;width:0.1px;height:0.1px;opacity:0;">
+                        </label>
+                    </div>
+                </div>
+                <div class="field full galeria-cadastro" id="editVPreview" style="min-height:60px;"></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" id="editVCancelar">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="editVSalvar">Salvar alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000';
+        let backendOnline = false;
+        let cacheVeiculos = null;
+        let cacheClientes = null;
+        let cacheFormasPagamento = null;
+        let editVeiculoId = null;
+        var fotosCadastro = [];
+        var editFotosArray = [];
+
+        const STORAGE = {
+            veiculos: 'locacao_veiculos',
+            clientes: 'locacao_clientes',
+            locacoes: 'locacao_locacoes',
+            formasPagamento: 'locacao_formas_pagamento',
+            pagamentos: 'locacao_pagamentos',
+            manutencoes: 'locacao_manutencoes',
+            nextIdVeiculo: 'locacao_next_id_veiculo',
+            nextIdCliente: 'locacao_next_id_cliente',
+            nextIdLocacao: 'locacao_next_id_locacao',
+            nextIdForma: 'locacao_next_id_forma',
+            nextIdPagamento: 'locacao_next_id_pagamento',
+            nextIdManutencao: 'locacao_next_id_manutencao'
+        };
+
+        // ========== BANCO DE DADOS (localStorage) - Todas as atualizações do banco devem estar aqui ==========
+        // Leitura/escrita: use apenas as funções abaixo. Não use localStorage diretamente em outras partes do código.
+
+        function getVeiculosFromStorage() {
+            var raw = localStorage.getItem(STORAGE.veiculos);
+            return raw ? JSON.parse(raw) : [];
+        }
+        function getVeiculos() {
+            if (cacheVeiculos !== null) return cacheVeiculos;
+            return getVeiculosFromStorage();
+        }
+        function setVeiculos(arr) { localStorage.setItem(STORAGE.veiculos, JSON.stringify(arr)); cacheVeiculos = null; }
+
+        function getClientesFromStorage() {
+            var raw = localStorage.getItem(STORAGE.clientes);
+            return raw ? JSON.parse(raw) : [];
+        }
+        function getClientes() {
+            if (cacheClientes !== null) return cacheClientes;
+            return getClientesFromStorage();
+        }
+        function setClientes(arr) { localStorage.setItem(STORAGE.clientes, JSON.stringify(arr)); cacheClientes = null; }
+
+        function getLocacoes() { var l = localStorage.getItem(STORAGE.locacoes); return l ? JSON.parse(l) : []; }
+        function setLocacoes(arr) { localStorage.setItem(STORAGE.locacoes, JSON.stringify(arr)); }
+
+        function getFormasPagamentoFromStorage() { var f = localStorage.getItem(STORAGE.formasPagamento); return f ? JSON.parse(f) : []; }
+        function getFormasPagamento() {
+            if (backendOnline && cacheFormasPagamento !== null) return cacheFormasPagamento;
+            return getFormasPagamentoFromStorage();
+        }
+        function setFormasPagamento(arr) { localStorage.setItem(STORAGE.formasPagamento, JSON.stringify(arr)); }
+
+        function getPagamentos() { var p = localStorage.getItem(STORAGE.pagamentos); return p ? JSON.parse(p) : []; }
+        function setPagamentos(arr) { localStorage.setItem(STORAGE.pagamentos, JSON.stringify(arr)); }
+
+        function getManutencoes() { var m = localStorage.getItem(STORAGE.manutencoes); return m ? JSON.parse(m) : []; }
+        function setManutencoes(arr) { localStorage.setItem(STORAGE.manutencoes, JSON.stringify(arr)); }
+
+        function nextId(key) {
+            var n = parseInt(localStorage.getItem(key) || '1', 10);
+            localStorage.setItem(key, String(n + 1));
+            return n;
+        }
+        function setNextId(key, value) { localStorage.setItem(key, String(value)); }
+
+        // ========== Fim do bloco Banco de Dados ==========
+
+        const titulos = { dashboard: 'Dashboard', veiculos: 'Veículos', clientes: 'Clientes', locacoes: 'Locações', 'formas-pagamento': 'Formas de Pagamento', 'controle-financeiro': 'Controle Financeiro', relatorios: 'Relatórios' };
+        var chartFrota = null, chartLocacoes = null, chartManutencao = null, chartFaturamento = null;
+        var CHART_OPTS = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#9ca3af', font: { family: 'DM Sans', size: 12 } } }
+            },
+            scales: {}
+        };
+
+        function getFotosVeiculo(v) {
+            if (!v) return [];
+            var f = v.fotos;
+            if (Array.isArray(f)) {
+                return f.slice(0, 6).filter(function(s) { return s && String(s).trim(); });
+            }
+            if (v.foto && String(v.foto).trim()) return [String(v.foto).trim()];
+            return [];
+        }
+        function getFotosFromVeiculo(vApi, localV) {
+            var arr = [];
+            if (vApi && Array.isArray(vApi.fotos) && vApi.fotos.length > 0) arr = vApi.fotos.slice(0, 6);
+            else if (localV && Array.isArray(localV.fotos) && localV.fotos.length > 0) arr = localV.fotos.slice(0, 6);
+            else if (localV && localV.foto) arr = [localV.foto];
+            else if (vApi && vApi.foto) arr = [vApi.foto];
+            return arr;
+        }
+        function setBackendStatus(estado, texto) {
+            const el = document.getElementById('backendStatus');
+            el.textContent = texto;
+            el.className = 'backend-status ' + estado;
+        }
+
+        async function fetchFromBackend(path) {
+            try {
+                const r = await fetch(API_BASE + path, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                if (!r.ok) return null;
+                return await r.json();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function carregarVeiculosDoBackend() {
+            var data = await fetchFromBackend('/veiculos/');
+            if (data && Array.isArray(data)) {
+                var localVeiculos = getVeiculosFromStorage();
+                var emManutencaoPorId = {};
+                localVeiculos.forEach(function(v) {
+                    if (v.em_manutencao === true && v.id) emManutencaoPorId[v.id] = true;
+                });
+                cacheVeiculos = data.map(function(v) {
+                    return {
+                        id: v.id,
+                        placa: v.placa,
+                        marca: v.marca,
+                        modelo: v.modelo,
+                        ano: v.ano,
+                        cor: v.cor,
+                        valor_diaria: v.valor_diaria,
+                        quilometragem: v.quilometragem,
+                        disponivel: v.disponivel !== false,
+                        em_manutencao: v.em_manutencao === true || emManutencaoPorId[v.id] === true,
+                        fotos: getFotosFromVeiculo(v, localVeiculos.find(function(l) { return l.id === v.id; }))
+                    };
+                });
+                setVeiculos(cacheVeiculos);
+                backendOnline = true;
+                setBackendStatus('online', 'Backend conectado');
+                return true;
+            }
+            cacheVeiculos = null;
+            return false;
+        }
+
+        async function carregarClientesDoBackend() {
+            const data = await fetchFromBackend('/clientes/');
+            if (data && Array.isArray(data)) {
+                cacheClientes = data.map(function(c) {
+                    var dataNasc = '';
+                    if (c.data_nascimento) {
+                        try {
+                            var d = new Date(c.data_nascimento);
+                            dataNasc = d.toLocaleDateString('pt-BR');
+                        } catch (e) {}
+                    }
+                    var dataCadastro = '';
+                    if (c.data_cadastro) {
+                        try {
+                            var dc = new Date(c.data_cadastro);
+                            dataCadastro = dc.toLocaleDateString('pt-BR');
+                        } catch (e) {}
+                    }
+                    return {
+                        id: c.id,
+                        nome: c.nome,
+                        cpf: c.cpf,
+                        telefone: c.telefone || '',
+                        email: c.email || '',
+                        cep: c.cep || '',
+                        endereco: c.endereco || '',
+                        data_nascimento: dataNasc,
+                        data_cadastro: dataCadastro || c.data_cadastro || ''
+                    };
+                });
+                backendOnline = true;
+                setBackendStatus('online', 'Backend conectado');
+                return true;
+            }
+            cacheClientes = null;
+            return false;
+        }
+
+        async function carregarEstatisticasDoBackend() {
+            const data = await fetchFromBackend('/estatisticas/');
+            if (data && data.veiculos != null) {
+                document.getElementById('statVeiculos').textContent = data.veiculos.total || 0;
+                document.getElementById('statDisponiveis').textContent = data.veiculos.disponivel || 0;
+                document.getElementById('statClientes').textContent = data.clientes ? data.clientes.total : 0;
+                document.getElementById('statLocacoes').textContent = data.locacoes ? data.locacoes.ativas : 0;
+                return true;
+            }
+            return false;
+        }
+
+        async function atualizarDadosDoBackend() {
+            setBackendStatus('loading', 'Atualizando...');
+            var statsOk = await carregarEstatisticasDoBackend();
+            var veiculosOk = await carregarVeiculosDoBackend();
+            var clientesOk = await carregarClientesDoBackend();
+            var formasOk = await carregarFormasPagamentoDoBackend();
+            var locacoesOk = await carregarLocacoesDoBackend();
+            if (veiculosOk || clientesOk || statsOk || formasOk || locacoesOk) {
+                backendOnline = true;
+                setBackendStatus('online', 'Backend conectado');
+            } else {
+                backendOnline = false;
+                setBackendStatus('offline', 'Dados locais');
+                cacheVeiculos = null;
+                cacheClientes = null;
+            }
+            atualizarStats();
+            renderDashboardCharts();
+            renderVeiculos();
+            renderManutencoes();
+            renderClientes();
+            renderFormasPagamento();
+            atualizarSelectFormasPagamento();
+            renderLocacoes();
+            if (!statsOk) atualizarStats();
+            toast(veiculosOk || clientesOk || statsOk ? 'Dados atualizados do servidor.' : 'Servidor indisponível. Exibindo dados locais.');
+        }
+
+        async function carregarFormasPagamentoDoBackend() {
+            try {
+                const data = await fetch(API_BASE + '/formas-pagamento/', { method: 'GET', headers: { 'Accept': 'application/json' } });
+                if (data && data.ok) {
+                    const arr = await data.json();
+                    cacheFormasPagamento = Array.isArray(arr) ? arr.map(function(f) { return { id: f.id, nome: f.nome, descricao: f.descricao || '', ativa: f.ativa !== false }; }) : [];
+                    return true;
+                }
+            } catch (e) {}
+            cacheFormasPagamento = null;
+            return false;
+        }
+
+        async function carregarLocacoesDoBackend() {
+            try {
+                const r = await fetch(API_BASE + '/locacoes/', { method: 'GET', headers: { 'Accept': 'application/json' } });
+                if (!r.ok) return false;
+                const data = await r.json();
+                if (!Array.isArray(data)) return false;
+                const formas = getFormasPagamento();
+                const locacoesMapeadas = data.map(function(l) {
+                    var pagamentosLoc = (l.pagamentos || []).map(function(p) {
+                        var formaNome = (formas.find(function(f) { return f.id === p.id_forma_pagamento; }) || {}).nome || '';
+                        return { id: p.id, id_locacao: l.id, id_forma_pagamento: p.id_forma_pagamento, valor_pagamento: p.valor_pagamento, data_pagamento: p.data_pagamento, numero_comprovante: p.numero_comprovante || '', observacoes: p.observacoes || '', forma_nome: formaNome };
+                    });
+                    return { id: l.id, id_cliente: l.id_cliente, id_veiculo: l.id_veiculo, data_inicio: l.data_inicio, data_fim: l.data_fim, dias: l.dias, valor_total: l.valor_total, multa_atraso: l.multa_atraso || 0, ativa: l.ativa !== false, observacoes: l.observacoes || '', cliente: l.cliente || {}, veiculo: l.veiculo || {}, pagamentos: pagamentosLoc };
+                });
+                setLocacoes(locacoesMapeadas);
+                var todosPagamentos = [];
+                locacoesMapeadas.forEach(function(l) { (l.pagamentos || []).forEach(function(p) { todosPagamentos.push({ id: p.id, id_locacao: l.id, id_forma_pagamento: p.id_forma_pagamento, valor_pagamento: p.valor_pagamento, data_pagamento: p.data_pagamento, numero_comprovante: p.numero_comprovante || '', observacoes: p.observacoes || '' }); }); });
+                setPagamentos(todosPagamentos);
+                return true;
+            } catch (e) { return false; }
+        }
+
+        function normalizarCpf(cpf) { return (cpf || '').replace(/\D/g, '').trim(); }
+
+        function atualizarStats() {
+            var veiculos = getVeiculos();
+            var idsAlugados = getIdsVeiculosAlugados();
+            var disponiveis = veiculos.filter(function(v) { return !idsAlugados.has(v.id); }).length;
+            document.getElementById('statVeiculos').textContent = veiculos.length;
+            document.getElementById('statDisponiveis').textContent = disponiveis;
+            document.getElementById('statClientes').textContent = getClientes().length;
+            document.getElementById('statLocacoes').textContent = getLocacoes().filter(function(l) { return l.ativa; }).length;
+            var statMan = document.getElementById('statManutencao');
+            if (statMan) statMan.textContent = veiculos.filter(function(v) { return v.em_manutencao === true; }).length;
+        }
+
+        function renderDashboardCharts() {
+            if (typeof Chart === 'undefined') return;
+            var veiculos = getVeiculos();
+            var idsAlugados = getIdsVeiculosAlugados();
+            var disp = 0, alug = 0, manut = 0;
+            veiculos.forEach(function(v) {
+                if (v.em_manutencao === true) manut++;
+                else if (idsAlugados.has(v.id) || v.disponivel === false) alug++;
+                else disp++;
+            });
+            if (chartFrota) chartFrota.destroy();
+            chartFrota = new Chart(document.getElementById('chartFrota'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Disponíveis', 'Alugados', 'Em manutenção'],
+                    datasets: [{ data: [disp, alug, manut], backgroundColor: ['#10b981', '#f59e0b', '#6b7280'], borderColor: ['#10b981', '#f59e0b', '#6b7280'], borderWidth: 2 }]
+                },
+                options: Object.assign({}, CHART_OPTS, { plugins: { legend: { position: 'bottom' } } })
+            });
+            var locacoes = getLocacoes();
+            var ativas = locacoes.filter(function(l) { return l.ativa; }).length;
+            var finalizadas = locacoes.length - ativas;
+            if (chartLocacoes) chartLocacoes.destroy();
+            chartLocacoes = new Chart(document.getElementById('chartLocacoes'), {
+                type: 'bar',
+                data: {
+                    labels: ['Ativas', 'Finalizadas'],
+                    datasets: [{ label: 'Locações', data: [ativas, finalizadas], backgroundColor: ['#0ea5e9', '#6b7280'], borderRadius: 6 }]
+                },
+                options: Object.assign({}, CHART_OPTS, {
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#9ca3af', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.06)' } },
+                        x: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+                    }
+                })
+            });
+            var manutencoes = getManutencoes();
+            var porVeiculo = {};
+            manutencoes.forEach(function(m) {
+                porVeiculo[m.id_veiculo] = (porVeiculo[m.id_veiculo] || 0) + Number(m.valor);
+            });
+            var veiculosComGasto = veiculos.filter(function(v) { return porVeiculo[v.id] > 0; }).slice(0, 8);
+            var labelsMan = veiculosComGasto.map(function(v) { return v.placa; });
+            var dataMan = veiculosComGasto.map(function(v) { return porVeiculo[v.id]; });
+            if (chartManutencao) chartManutencao.destroy();
+            chartManutencao = new Chart(document.getElementById('chartManutencao'), {
+                type: 'bar',
+                data: {
+                    labels: labelsMan.length ? labelsMan : ['Nenhum'],
+                    datasets: [{ label: 'R$', data: dataMan.length ? dataMan : [0], backgroundColor: '#f59e0b', borderRadius: 6 }]
+                },
+                options: Object.assign({}, CHART_OPTS, {
+                    indexAxis: 'y',
+                    scales: {
+                        x: { beginAtZero: true, ticks: { color: '#9ca3af', callback: function(v) { return 'R$ ' + v; } }, grid: { color: 'rgba(255,255,255,0.06)' } },
+                        y: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+                    }
+                })
+            });
+            var pagamentos = getPagamentos();
+            var totalRecebido = pagamentos.reduce(function(s, p) { return s + Number(p.valor_pagamento); }, 0);
+            var locacoesAtivas = getLocacoes().filter(function(l) { return l.ativa; });
+            var totalPendente = 0;
+            var pagByLoc = {};
+            getPagamentos().forEach(function(p) {
+                pagByLoc[p.id_locacao] = (pagByLoc[p.id_locacao] || 0) + p.valor_pagamento;
+            });
+            locacoesAtivas.forEach(function(l) {
+                totalPendente += l.valor_total - (pagByLoc[l.id] || 0);
+            });
+            if (chartFaturamento) chartFaturamento.destroy();
+            chartFaturamento = new Chart(document.getElementById('chartFaturamento'), {
+                type: 'bar',
+                data: {
+                    labels: ['Recebido', 'A receber'],
+                    datasets: [{ label: 'R$', data: [totalRecebido, totalPendente], backgroundColor: ['#10b981', '#f59e0b'], borderRadius: 6 }]
+                },
+                options: Object.assign({}, CHART_OPTS, {
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#9ca3af', callback: function(v) { return 'R$ ' + v; } }, grid: { color: 'rgba(255,255,255,0.06)' } },
+                        x: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+                    }
+                })
+            });
+        }
+
+        function toast(texto, tipo = 'success') {
+            const container = document.getElementById('toastContainer');
+            const div = document.createElement('div');
+            div.className = 'toast ' + tipo;
+            div.innerHTML = '<p>' + texto + '</p>';
+            container.appendChild(div);
+            setTimeout(() => div.remove(), 4500);
+        }
+
+        function confirmar(titulo, texto) {
+            return new Promise(resolve => {
+                const overlay = document.getElementById('modalConfirm');
+                document.getElementById('modalTitulo').textContent = titulo;
+                document.getElementById('modalTexto').textContent = texto;
+                overlay.classList.add('ativo');
+                document.getElementById('modalCancelar').onclick = () => { overlay.classList.remove('ativo'); resolve(false); };
+                document.getElementById('modalConfirmar').onclick = () => { overlay.classList.remove('ativo'); resolve(true); };
+            });
+        }
+
+        function lerArquivoComoDataUrl(file, callback) {
+            if (!file || !file.type.match(/^image\//)) { callback(''); return; }
+            var r = new FileReader();
+            r.onload = function() { callback(r.result || ''); };
+            r.readAsDataURL(file);
+        }
+        function renderCadastroFotos() {
+            var el = document.getElementById('vFotoPreview');
+            if (!el) return;
+            el.innerHTML = '';
+            for (var i = 0; i < fotosCadastro.length; i++) {
+                (function(idx) {
+                    var slot = document.createElement('div');
+                    slot.className = 'slot';
+                    var src = fotosCadastro[idx];
+                    if (src && (src.indexOf('data:') === 0 || src.indexOf('http') === 0)) {
+                        var img = document.createElement('img');
+                        img.src = src;
+                        img.alt = 'Foto ' + (idx + 1);
+                        img.onerror = function() { slot.innerHTML = '<span style="font-size:0.7rem;padding:4px;">Erro</span>'; };
+                        slot.appendChild(img);
+                    }
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-danger btn-sm remover';
+                    btn.textContent = '×';
+                    btn.onclick = function() { fotosCadastro.splice(idx, 1); renderCadastroFotos(); };
+                    slot.appendChild(btn);
+                    el.appendChild(slot);
+                })(i);
+            }
+        }
+        document.getElementById('vFotoAddUrl').addEventListener('click', function() {
+            var url = document.getElementById('vFoto').value.trim();
+            if (!url) { toast('Informe uma URL.', 'error'); return; }
+            if (fotosCadastro.length >= 6) { toast('Máximo de 6 imagens.', 'warning'); return; }
+            fotosCadastro.push(url);
+            document.getElementById('vFoto').value = '';
+            renderCadastroFotos();
+        });
+        document.getElementById('vFotoFile').addEventListener('change', function() {
+            var files = this.files;
+            var nomeEl = document.getElementById('vFotoFileName');
+            this.value = '';
+            if (!files || files.length === 0) { if (nomeEl) nomeEl.textContent = ''; return; }
+            var restantes = 6 - fotosCadastro.length;
+            if (restantes <= 0) { toast('Já há 6 imagens. Remova uma para adicionar.', 'warning'); return; }
+            var count = 0;
+            function processNext(i) {
+                if (i >= files.length || fotosCadastro.length >= 6) {
+                    if (nomeEl) nomeEl.textContent = fotosCadastro.length + ' imagem(ns)';
+                    renderCadastroFotos();
+                    return;
+                }
+                var file = files[i];
+                if (!file.type.match(/^image\//)) { processNext(i + 1); return; }
+                lerArquivoComoDataUrl(file, function(dataUrl) {
+                    if (dataUrl && fotosCadastro.length < 6) fotosCadastro.push(dataUrl);
+                    processNext(i + 1);
+                });
+            }
+            processNext(0);
+        });
+
+        document.getElementById('editVCancelar').addEventListener('click', fecharModalEditarVeiculo);
+        document.getElementById('editVSalvar').addEventListener('click', salvarEdicaoVeiculo);
+        document.getElementById('editVFotoAddUrl').addEventListener('click', function() {
+            var url = document.getElementById('editVFoto').value.trim();
+            if (!url) { toast('Informe uma URL.', 'error'); return; }
+            if (editFotosArray.length >= 6) { toast('Máximo de 6 imagens.', 'warning'); return; }
+            editFotosArray.push(url);
+            document.getElementById('editVFoto').value = '';
+            renderEditFotos();
+        });
+        document.getElementById('editVFotoFile').addEventListener('change', function() {
+            var files = this.files;
+            this.value = '';
+            if (!files || files.length === 0) return;
+            var restantes = 6 - editFotosArray.length;
+            if (restantes <= 0) { toast('Já há 6 imagens. Remova uma para adicionar.', 'warning'); return; }
+            function processNext(i) {
+                if (i >= files.length || editFotosArray.length >= 6) { renderEditFotos(); return; }
+                var file = files[i];
+                if (!file.type.match(/^image\//)) { processNext(i + 1); return; }
+                lerArquivoComoDataUrl(file, function(dataUrl) {
+                    if (dataUrl && editFotosArray.length < 6) editFotosArray.push(dataUrl);
+                    processNext(i + 1);
+                });
+            }
+            processNext(0);
+        });
+        document.getElementById('modalEditarVeiculo').addEventListener('click', function(e) {
+            if (e.target === document.getElementById('modalEditarVeiculo')) fecharModalEditarVeiculo();
+        });
+
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('ativo'));
+                document.querySelectorAll('.painel').forEach(p => p.classList.remove('ativo'));
+                btn.classList.add('ativo');
+                const painel = btn.getAttribute('data-painel');
+                document.getElementById('painel-' + painel).classList.add('ativo');
+                document.getElementById('tituloPainel').textContent = titulos[painel] || painel;
+                if (painel === 'dashboard') {
+                    atualizarStats();
+                    renderDashboardCharts();
+                } else if (painel === 'veiculos') {
+                    setBackendStatus('loading', 'Carregando...');
+                    var ok = await carregarVeiculosDoBackend();
+                    if (!ok) { setBackendStatus('offline', 'Dados locais'); cacheVeiculos = null; }
+                    atualizarStats();
+                    renderVeiculos();
+                    renderManutencoes();
+                } else if (painel === 'clientes') {
+                    setBackendStatus('loading', 'Carregando...');
+                    var ok = await carregarClientesDoBackend();
+                    if (!ok) { setBackendStatus('offline', 'Dados locais'); cacheClientes = null; }
+                    atualizarStats();
+                    renderClientes();
+                } else {
+                    atualizarStats();
+                    if (painel === 'locacoes') { atualizarSelectFormasPagamento(); renderLocacoes(); }
+                    if (painel === 'formas-pagamento') { carregarFormasPagamentoDoBackend().then(function() { renderFormasPagamento(); atualizarSelectFormasPagamento(); }); }
+                    if (painel === 'controle-financeiro') { carregarControleFinanceiro(); }
+                    if (painel === 'relatorios') { configurarLinksRelatorios(); }
+                }
+            });
+        });
+
+        function configurarLinksRelatorios() {
+            document.getElementById('btnPdfMensal').setAttribute('href', API_BASE + '/relatorios/pdf/mensal');
+            document.getElementById('btnPdfVencidas').setAttribute('href', API_BASE + '/relatorios/pdf/vencidas');
+            document.getElementById('btnPdfSistema').setAttribute('href', API_BASE + '/relatorios/pdf/sistema');
+        }
+        document.getElementById('btnImprimirSistema').addEventListener('click', async function() {
+            if (!backendOnline) { toast('Conecte o backend para carregar os dados.', 'warning'); return; }
+            try {
+                const [stats, dash] = await Promise.all([
+                    fetch(API_BASE + '/estatisticas/').then(r => r.ok ? r.json() : {}),
+                    fetch(API_BASE + '/financeiro/dashboard/saldo').then(r => r.ok ? r.json() : {})
+                ]);
+                const v = stats.veiculos || {}; const c = stats.clientes || {}; const l = stats.locacoes || {}; const p = stats.pagamentos || {};
+                const saldo = (dash.saldo != null) ? dash.saldo : 0;
+                const fmt = n => (typeof n === 'number') ? n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00';
+                let html = '<table style="width:100%;border-collapse:collapse;margin-top:0.5rem;">';
+                html += '<tr style="background:var(--surface-hover);"><th style="text-align:left;padding:0.5rem;">Indicador</th><th style="text-align:right;padding:0.5rem;">Valor</th></tr>';
+                html += '<tr><td style="padding:0.5rem;border-bottom:1px solid var(--border);">Total de veículos</td><td style="text-align:right;padding:0.5rem;">' + (v.total || 0) + '</td></tr>';
+                html += '<tr><td style="padding:0.5rem;border-bottom:1px solid var(--border);">Veículos disponíveis</td><td style="text-align:right;padding:0.5rem;">' + (v.disponivel || 0) + '</td></tr>';
+                html += '<tr><td style="padding:0.5rem;border-bottom:1px solid var(--border);">Total de clientes</td><td style="text-align:right;padding:0.5rem;">' + (c.total || 0) + '</td></tr>';
+                html += '<tr><td style="padding:0.5rem;border-bottom:1px solid var(--border);">Locações ativas</td><td style="text-align:right;padding:0.5rem;">' + (l.ativas || 0) + '</td></tr>';
+                html += '<tr><td style="padding:0.5rem;border-bottom:1px solid var(--border);">Valor total pago (locações)</td><td style="text-align:right;padding:0.5rem;">R$ ' + fmt(p.valor_total_pago || 0) + '</td></tr>';
+                html += '<tr style="font-weight:bold;"><td style="padding:0.5rem;">Saldo financeiro (receitas − despesas pagas)</td><td style="text-align:right;padding:0.5rem;">R$ ' + fmt(saldo) + '</td></tr>';
+                html += '</table><p style="margin-top:1rem;color:var(--text-muted);font-size:0.9rem;">Relatório emitido em ' + new Date().toLocaleString('pt-BR') + '</p>';
+                document.getElementById('conteudoImpressaoRelatorio').innerHTML = html;
+                document.getElementById('areaImpressaoRelatorio').style.display = 'block';
+                window.print();
+                document.getElementById('areaImpressaoRelatorio').style.display = 'none';
+            } catch (e) {
+                toast('Erro ao carregar dados para impressão.', 'error');
+            }
+        });
+
+        function buscarCep() {
+            var cep = document.getElementById('cCep').value.replace(/\D/g, '');
+            var status = document.getElementById('statusCep');
+            if (cep.length !== 8) {
+                status.textContent = 'Informe o CEP com 8 dígitos.';
+                status.className = 'status-cep erro';
+                return;
+            }
+            status.textContent = 'Buscando...';
+            status.className = 'status-cep';
+            fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.erro) {
+                        status.textContent = 'CEP não encontrado.';
+                        status.className = 'status-cep erro';
+                    } else {
+                        document.getElementById('cLogradouro').value = data.logradouro || '';
+                        document.getElementById('cBairro').value = data.bairro || '';
+                        document.getElementById('cCidade').value = data.localidade || '';
+                        document.getElementById('cUf').value = (data.uf || '').toUpperCase();
+                        status.textContent = 'Endereço preenchido. Informe o número.';
+                        status.className = 'status-cep ok';
+                        document.getElementById('cNumero').focus();
+                    }
+                })
+                .catch(function() {
+                    status.textContent = 'Erro ao buscar CEP.';
+                    status.className = 'status-cep erro';
+                });
+        }
+        document.getElementById('cCep').addEventListener('input', function() {
+            var v = this.value.replace(/\D/g, '');
+            if (v.length > 8) this.value = v.slice(0, 8);
+        });
+        document.getElementById('cCep').addEventListener('blur', function() {
+            var v = this.value.replace(/\D/g, '');
+            if (v.length === 8) this.value = v.slice(0, 5) + '-' + v.slice(5);
+            if (v.length === 8) buscarCep();
+        });
+        document.getElementById('btnBuscarCep').addEventListener('click', buscarCep);
+        document.getElementById('cUf').addEventListener('input', function() { this.value = this.value.toUpperCase().slice(0, 2); });
+
+        function emptyState(iconPath, msg) {
+            return '<div class="empty-state">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' + iconPath + '</svg>' +
+                '<p>' + msg + '</p></div>';
+        }
+
+        function getIdsVeiculosAlugados() {
+            var locacoes = getLocacoes();
+            var ids = new Set();
+            locacoes.forEach(function(l) {
+                if (l.ativa && l.id_veiculo) ids.add(l.id_veiculo);
+            });
+            return ids;
+        }
+
+        function renderVeiculos() {
+            var veiculos = getVeiculos();
+            var idsAlugados = getIdsVeiculosAlugados();
+            var div = document.getElementById('listaVeiculos');
+            if (veiculos.length === 0) {
+                div.innerHTML = emptyState('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H8.24a1 1 0 0 0-.8.4L5 11l-5.16.86a1 1 0 0 0-.84.99V16h3"/>', 'Nenhum veículo cadastrado. Cadastre o primeiro acima.');
+                return;
+            }
+            window._fotosVeiculos = {};
+            var html = '<div class="table-wrap"><table><thead><tr><th>Foto</th><th>Placa</th><th>Marca / Modelo</th><th>Ano</th><th>Cor</th><th>Km</th><th>Diária</th><th>Status</th><th></th></tr></thead><tbody>';
+            veiculos.forEach(function(v) {
+                var fotos = getFotosVeiculo(v);
+                var fotoHtml = '';
+                if (fotos.length === 0) {
+                    fotoHtml = '<span class="veiculo-foto-placeholder">Sem foto</span>';
+                } else {
+                    window._fotosVeiculos[v.id] = fotos;
+                    var idAttr = 'veiculo-carousel-' + v.id;
+                    var idImg = 'veiculo-foto-img-' + v.id;
+                    var idNum = 'veiculo-foto-num-' + v.id;
+                    var placaEsc = String(v.placa).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                    fotoHtml = '<div class="carousel-veiculo-foto" id="' + idAttr + '" data-current="0">' +
+                        '<div class="carousel-img-wrap"><img id="' + idImg + '" alt="' + placaEsc + '" onerror="this.style.display=\'none\'"></div>' +
+                        '<div class="carousel-nav">' +
+                        '<button type="button" onclick="mostrarFotoVeiculo(' + JSON.stringify(v.id) + ', -1)" aria-label="Foto anterior">&#9664;</button>' +
+                        '<span class="carousel-num" id="' + idNum + '">1/' + fotos.length + '</span>' +
+                        '<button type="button" onclick="mostrarFotoVeiculo(' + JSON.stringify(v.id) + ', 1)" aria-label="Próxima foto">&#9654;</button>' +
+                        '</div></div>';
+                }
+                var emManutencao = v.em_manutencao === true;
+                var estaAlugado = !emManutencao && (idsAlugados.has(v.id) || v.disponivel === false);
+                var status;
+                if (emManutencao) status = '<span class="badge badge-manutencao">Em manutenção</span>';
+                else if (estaAlugado) status = '<span class="badge badge-warning">Alugado</span>';
+                else status = '<span class="badge badge-success">Disponível</span>';
+                var btnExcluir = (!estaAlugado && !emManutencao) ? '<button type="button" class="btn btn-danger btn-sm" onclick="deletarVeiculo(' + v.id + ',\'' + String(v.placa).replace(/'/g, "\\'") + '\')">Excluir</button>' : '';
+                html += '<tr><td><div class="fotos-veiculo-lista">' + fotoHtml + '</div></td><td><strong>' + v.placa + '</strong></td><td>' + v.marca + ' ' + v.modelo + '</td><td>' + v.ano + '</td><td>' + v.cor + '</td><td>' + Number(v.quilometragem).toLocaleString('pt-BR') + ' km</td><td>R$ ' + Number(v.valor_diaria).toFixed(2).replace('.', ',') + '</td><td>' + status + '</td><td class="linha-acoes"><button type="button" class="btn btn-ghost btn-sm" onclick="editarVeiculo(' + v.id + ')">Editar</button> ' + btnExcluir + '</td></tr>';
+            });
+            div.innerHTML = html + '</tbody></table></div>';
+            veiculos.forEach(function(v) {
+                var fotos = getFotosVeiculo(v);
+                if (fotos.length > 0) {
+                    var img = document.getElementById('veiculo-foto-img-' + v.id);
+                    if (img && fotos[0]) {
+                        var src = (fotos[0] || '').trim();
+                        if (src) img.src = src;
+                    }
+                }
+            });
+        }
+
+        function mostrarFotoVeiculo(idVeiculo, delta) {
+            var fotos = window._fotosVeiculos && window._fotosVeiculos[idVeiculo];
+            if (!fotos || fotos.length === 0) return;
+            var container = document.getElementById('veiculo-carousel-' + idVeiculo);
+            if (!container) return;
+            var current = parseInt(container.getAttribute('data-current') || '0', 10);
+            var total = fotos.length;
+            var next = (current + delta + total) % total;
+            container.setAttribute('data-current', next);
+            var img = document.getElementById('veiculo-foto-img-' + idVeiculo);
+            var numEl = document.getElementById('veiculo-foto-num-' + idVeiculo);
+            if (img) {
+                var src = (fotos[next] || '').trim();
+                if (src) { img.src = src; img.style.display = ''; }
+            }
+            if (numEl) numEl.textContent = (next + 1) + '/' + total;
+        }
+
+        function mostrarFotoVeiculoManut(idVeiculo, delta) {
+            var fotos = window._fotosVeiculos && window._fotosVeiculos[idVeiculo];
+            if (!fotos || fotos.length === 0) return;
+            var container = document.getElementById('manut-carousel-' + idVeiculo);
+            if (!container) return;
+            var current = parseInt(container.getAttribute('data-current') || '0', 10);
+            var total = fotos.length;
+            var next = (current + delta + total) % total;
+            container.setAttribute('data-current', next);
+            var img = document.getElementById('manut-foto-img-' + idVeiculo);
+            var numEl = document.getElementById('manut-foto-num-' + idVeiculo);
+            if (img) { var src = (fotos[next] || '').trim(); if (src) { img.src = src; img.style.display = ''; } }
+            if (numEl) numEl.textContent = (next + 1) + '/' + total;
+        }
+
+        function getTotalGastosPorVeiculo(idVeiculo) {
+            var manutencoes = getManutencoes();
+            var total = 0;
+            manutencoes.forEach(function(m) {
+                if (m.id_veiculo === idVeiculo) total += Number(m.valor) || 0;
+            });
+            return total;
+        }
+
+        function renderManutencoes() {
+            var veiculos = getVeiculos();
+            var emManutencao = veiculos.filter(function(v) { return v.em_manutencao === true; });
+            var div = document.getElementById('listaManutencoes');
+            var resumo = document.getElementById('resumoManutencao');
+            var totalGeral = 0;
+            emManutencao.forEach(function(v) {
+                totalGeral += getTotalGastosPorVeiculo(v.id);
+            });
+            if (emManutencao.length === 0) {
+                div.innerHTML = '<p class="vazio">Nenhum veículo em manutenção. Use "Enviar para manutenção" ou "Lançar gasto" acima.</p>';
+            } else {
+                if (!window._fotosVeiculos) window._fotosVeiculos = {};
+                var html = '<div class="table-wrap"><table><thead><tr><th>Foto</th><th>Placa</th><th>Veículo</th><th>Total gastos</th><th>Registros de gasto</th><th>Ações</th></tr></thead><tbody>';
+                emManutencao.forEach(function(v) {
+                    var fotos = getFotosVeiculo(v);
+                    window._fotosVeiculos[v.id] = fotos;
+                    var fotoHtml;
+                    if (fotos.length === 0) {
+                        fotoHtml = '<span class="veiculo-foto-placeholder">Sem foto</span>';
+                    } else {
+                        var placaEsc = String(v.placa).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                        fotoHtml = '<div class="carousel-veiculo-foto" id="manut-carousel-' + v.id + '" data-current="0">' +
+                            '<div class="carousel-img-wrap"><img id="manut-foto-img-' + v.id + '" alt="' + placaEsc + '" onerror="this.style.display=\'none\'"></div>' +
+                            '<div class="carousel-nav">' +
+                            '<button type="button" onclick="mostrarFotoVeiculoManut(' + JSON.stringify(v.id) + ', -1)" aria-label="Foto anterior">&#9664;</button>' +
+                            '<span class="carousel-num" id="manut-foto-num-' + v.id + '">1/' + fotos.length + '</span>' +
+                            '<button type="button" onclick="mostrarFotoVeiculoManut(' + JSON.stringify(v.id) + ', 1)" aria-label="Próxima foto">&#9654;</button>' +
+                            '</div></div>';
+                    }
+                    var gastos = getTotalGastosPorVeiculo(v.id);
+                    var registros = getManutencoes().filter(function(m) { return m.id_veiculo === v.id; });
+                    var regLinhas = '';
+                    registros.forEach(function(r) {
+                        var dataBr = r.data ? (r.data.slice(0, 10).split('-').reverse().join('/')) : '-';
+                        regLinhas += '<div class="linha-gasto">' + dataBr + ' — ' + (r.descricao || '') + ' — R$ ' + Number(r.valor).toFixed(2).replace('.', ',') + ' <button type="button" class="btn btn-ghost btn-sm" onclick="editarGastoManutencao(' + r.id + ')">Editar</button> <button type="button" class="btn btn-danger btn-sm" onclick="excluirGastoManutencao(' + r.id + ',' + v.id + ')">Excluir</button></div>';
+                    });
+                    if (!regLinhas) regLinhas = '<span class="texto-ajuda">Sem registros de gasto</span>';
+                    html += '<tr><td><div class="fotos-veiculo-lista">' + fotoHtml + '</div></td><td><strong>' + v.placa + '</strong></td><td>' + v.marca + ' ' + v.modelo + ' (' + v.ano + ')</td><td>R$ ' + gastos.toFixed(2).replace('.', ',') + '</td><td class="registros-gasto">' + regLinhas + '</td><td class="linha-acoes"><button type="button" class="btn btn-ghost btn-sm" onclick="encerrarManutencao(' + v.id + ')">Encerrar manutenção</button></td></tr>';
+                });
+                div.innerHTML = html + '</tbody></table></div>';
+                emManutencao.forEach(function(v) {
+                    var fotos = getFotosVeiculo(v);
+                    if (fotos.length > 0) {
+                        var img = document.getElementById('manut-foto-img-' + v.id);
+                        if (img && fotos[0]) { var src = (fotos[0] || '').trim(); if (src) img.src = src; }
+                    }
+                });
+            }
+            resumo.innerHTML = '<strong>Total geral em manutenção:</strong> R$ ' + totalGeral.toFixed(2).replace('.', ',') + ' — Avalie a viabilidade de venda dos veículos com gastos elevados.';
+            var comGastos = veiculos.filter(function(v) { return getTotalGastosPorVeiculo(v.id) > 0; });
+            if (comGastos.length > 0) {
+                var htmlHist = '<p style="margin-top:1rem;font-size:0.85rem;color:var(--text-muted);"><strong>Histórico de gastos (avaliar venda):</strong></p><div class="table-wrap"><table><thead><tr><th>Placa</th><th>Veículo</th><th>Total gastos (R$)</th></tr></thead><tbody>';
+                comGastos.forEach(function(v) {
+                    var g = getTotalGastosPorVeiculo(v.id);
+                    htmlHist += '<tr><td>' + v.placa + '</td><td>' + v.marca + ' ' + v.modelo + ' (' + v.ano + ')</td><td>R$ ' + g.toFixed(2).replace('.', ',') + '</td></tr>';
+                });
+                resumo.innerHTML += htmlHist + '</tbody></table></div>';
+            }
+        }
+
+        function encerrarManutencao(idVeiculo) {
+            var veiculos = getVeiculos().slice();
+            var v = veiculos.find(function(x) { return x.id === idVeiculo; });
+            if (!v) return;
+            v.em_manutencao = false;
+            setVeiculos(veiculos);
+            cacheVeiculos = null;
+            renderVeiculos();
+            renderManutencoes();
+            atualizarStats();
+            toast('Manutenção encerrada. Dados salvos.');
+        }
+
+        function excluirGastoManutencao(idGasto, idVeiculo) {
+            if (!confirm('Excluir este registro de gasto?')) return;
+            var manutencoes = getManutencoes().filter(function(m) { return m.id !== idGasto; });
+            setManutencoes(manutencoes);
+            var restantes = manutencoes.filter(function(m) { return m.id_veiculo === idVeiculo; });
+            if (restantes.length === 0) {
+                var veiculos = getVeiculos().slice();
+                var v = veiculos.find(function(x) { return x.id === idVeiculo; });
+                if (v) { v.em_manutencao = false; setVeiculos(veiculos); cacheVeiculos = null; }
+            }
+            renderVeiculos();
+            renderManutencoes();
+            atualizarStats();
+            toast('Gasto excluído. Dados salvos.');
+        }
+
+        function editarGastoManutencao(idGasto) {
+            var manutencoes = getManutencoes();
+            var r = manutencoes.find(function(m) { return m.id === idGasto; });
+            if (!r) return;
+            var novaData = prompt('Data (AAAA-MM-DD):', r.data ? r.data.toString().slice(0, 10) : '');
+            if (novaData !== null && novaData.trim()) r.data = novaData.trim();
+            var novaDesc = prompt('Descrição:', r.descricao || '');
+            if (novaDesc !== null) r.descricao = novaDesc.trim();
+            var novoValor = prompt('Valor (R$):', r.valor);
+            if (novoValor !== null && novoValor.trim()) {
+                var n = parseFloat(String(novoValor).replace(',', '.'));
+                if (!isNaN(n)) r.valor = n;
+            }
+            setManutencoes(manutencoes);
+            renderManutencoes();
+            toast('Gasto atualizado. Dados salvos.');
+        }
+
+        document.getElementById('btnEnviarManutencao').addEventListener('click', function() {
+            var placa = document.getElementById('manPlaca').value.trim().toUpperCase();
+            if (!placa) { toast('Informe a placa do veículo.', 'error'); return; }
+            var veiculos = getVeiculos().slice();
+            var v = veiculos.find(function(x) { return x.placa === placa; });
+            if (!v) { toast('Veículo não encontrado.', 'error'); return; }
+            if (getIdsVeiculosAlugados().has(v.id)) { toast('Veículo está alugado.', 'error'); return; }
+            if (v.em_manutencao) { toast('Veículo já está em manutenção.', 'warning'); return; }
+            v.em_manutencao = true;
+            setVeiculos(veiculos);
+            cacheVeiculos = null;
+            document.getElementById('manPlaca').value = '';
+            renderVeiculos();
+            renderManutencoes();
+            atualizarStats();
+            toast('Veículo enviado para manutenção. Dados salvos.');
+        });
+
+        document.getElementById('btnLancarManutencao').addEventListener('click', function() {
+            var placa = document.getElementById('manPlaca').value.trim().toUpperCase();
+            var data = document.getElementById('manData').value;
+            var descricao = document.getElementById('manDesc').value.trim();
+            var valor = parseFloat(String(document.getElementById('manValor').value).replace(',', '.')) || 0;
+            if (!placa) { toast('Informe a placa do veículo.', 'error'); return; }
+            var veiculos = getVeiculos();
+            var veiculo = veiculos.find(function(v) { return v.placa === placa; });
+            if (!veiculo) { toast('Veículo não encontrado.', 'error'); return; }
+            if (getIdsVeiculosAlugados().has(veiculo.id)) { toast('Veículo está alugado. Não é possível lançar manutenção.', 'error'); return; }
+            if (valor <= 0) { toast('Informe o valor do gasto.', 'error'); return; }
+            var id = nextId(STORAGE.nextIdManutencao);
+            var manutencoes = getManutencoes().slice();
+            manutencoes.push({ id: id, id_veiculo: veiculo.id, data: data || new Date().toISOString().slice(0, 10), descricao: descricao || 'Manutenção', valor: valor });
+            setManutencoes(manutencoes);
+            veiculos = getVeiculos().slice();
+            veiculo = veiculos.find(function(v) { return v.placa === placa; });
+            if (veiculo) veiculo.em_manutencao = true;
+            setVeiculos(veiculos);
+            cacheVeiculos = null;
+            document.getElementById('manPlaca').value = '';
+            document.getElementById('manData').value = '';
+            document.getElementById('manDesc').value = '';
+            document.getElementById('manValor').value = '';
+            renderVeiculos();
+            renderManutencoes();
+            atualizarStats();
+            toast('Gasto lançado. Dados salvos.');
+        });
+
+        var MARCAS_VEICULOS = ['Acura','Alfa Romeo','Audi','BMW','BYD','Caoa Chery','Chevrolet','Chrysler','Citroën','Cupra','Dodge','Fiat','Ford','Honda','Hyundai','JAC','Jaguar','Jeep','Kia','Land Rover','Lexus','Lifan','Maserati','Mercedes-Benz','MG','Mini','Mitsubishi','Nissan','Peugeot','Porsche','RAM','Renault','Seres','Subaru','Suzuki','Toyota','Volkswagen','Volvo','Outra'];
+        var CORES_VEICULOS = ['Branco','Preto','Prata','Cinza','Vermelho','Azul','Verde','Bege','Marrom','Dourado','Chumbo','Outra'];
+        (function preencherDatalists() {
+            var dlMarcas = document.getElementById('listaMarcas');
+            MARCAS_VEICULOS.forEach(function(m) { var o = document.createElement('option'); o.value = m; dlMarcas.appendChild(o); });
+            var dlCores = document.getElementById('listaCores');
+            CORES_VEICULOS.forEach(function(c) { var o = document.createElement('option'); o.value = c; dlCores.appendChild(o); });
+        })();
+
+        document.getElementById('btnAddVeiculo').addEventListener('click', async function() {
+            var placa = document.getElementById('vPlaca').value.trim().toUpperCase();
+            var marca = document.getElementById('vMarca').value.trim();
+            var modelo = document.getElementById('vModelo').value.trim();
+            var ano = parseInt(document.getElementById('vAno').value, 10);
+            var cor = document.getElementById('vCor').value.trim();
+            var valor_diaria = parseFloat(String(document.getElementById('vValor').value).replace(',', '.')) || 0;
+            var quilometragem = parseFloat(String(document.getElementById('vKm').value).replace(',', '.')) || 0;
+            if (!placa || !marca || !modelo || !ano) { toast('Preencha placa, marca, modelo e ano.', 'error'); return; }
+            if (placa.length < 7) { toast('Placa deve ter 7 caracteres (ex: ABC1D23).', 'error'); return; }
+            var veiculos = getVeiculos();
+            if (veiculos.some(function(v) { return v.placa === placa; })) { toast('Já existe veículo com esta placa.', 'error'); return; }
+
+            if (backendOnline) {
+                try {
+                    var fotosEnviar = fotosCadastro.slice(0, 6);
+                    var r = await fetch(API_BASE + '/veiculos/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ placa: placa, marca: marca, modelo: modelo, ano: ano, cor: cor || 'Não informada', quilometragem: quilometragem || 0, valor_diaria: valor_diaria, fotos: fotosEnviar.length ? fotosEnviar : null })
+                    });
+                    if (r.ok) {
+                        await carregarVeiculosDoBackend();
+                        renderVeiculos();
+                        atualizarStats();
+                        ['vPlaca','vMarca','vModelo','vAno','vCor','vValor','vKm','vFoto'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+                        fotosCadastro = [];
+                        renderCadastroFotos();
+                        var vf = document.getElementById('vFotoFile'); if (vf) vf.value = '';
+                        var vfn = document.getElementById('vFotoFileName'); if (vfn) vfn.textContent = '';
+                        toast('Veículo cadastrado no servidor. Dados salvos.');
+                        return;
+                    }
+                    var err = await r.json().catch(function() { return {}; });
+                    toast(err.detail || 'Erro ao cadastrar no servidor. Salvando localmente.', 'warning');
+                } catch (e) {
+                    toast('Servidor indisponível. Salvando localmente.', 'warning');
+                }
+            }
+
+            veiculos = getVeiculos().slice();
+            var novoId = veiculos.length ? Math.max.apply(null, veiculos.map(function(v) { return v.id; })) + 1 : 1;
+            var fotos = fotosCadastro.slice(0, 6);
+            veiculos.push({ id: novoId, placa: placa, marca: marca, modelo: modelo, ano: ano, cor: cor || 'Não informada', valor_diaria: valor_diaria, quilometragem: quilometragem || 0, disponivel: true, em_manutencao: false, fotos: fotos });
+            setVeiculos(veiculos);
+            cacheVeiculos = null;
+            ['vPlaca','vMarca','vModelo','vAno','vCor','vValor','vKm','vFoto'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+            fotosCadastro = [];
+            renderCadastroFotos();
+            var vf = document.getElementById('vFotoFile'); if (vf) vf.value = '';
+            var vfn = document.getElementById('vFotoFileName'); if (vfn) vfn.textContent = '';
+            renderVeiculos();
+            atualizarStats();
+            toast('Veículo cadastrado. Dados salvos.');
+        });
+
+        function renderEditFotos() {
+            var el = document.getElementById('editVPreview');
+            if (!el) return;
+            el.innerHTML = '';
+            editFotosArray.forEach(function(src, idx) {
+                (function(i) {
+                    var slot = document.createElement('div');
+                    slot.className = 'slot';
+                    var img = document.createElement('img');
+                    img.src = src;
+                    img.alt = 'Foto ' + (i + 1);
+                    img.onerror = function() { slot.innerHTML = '<span style="font-size:0.7rem;padding:4px;">Erro</span>'; };
+                    slot.appendChild(img);
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-danger btn-sm remover';
+                    btn.textContent = '×';
+                    btn.onclick = function() { editFotosArray.splice(i, 1); renderEditFotos(); };
+                    slot.appendChild(btn);
+                    el.appendChild(slot);
+                })(idx);
+            });
+        }
+
+        async function editarVeiculo(id) {
+            var veiculos = getVeiculos();
+            var v = veiculos.find(function(x) { return x.id === id; });
+            if (!v) return;
+            editVeiculoId = id;
+            document.getElementById('editVPlaca').value = v.placa || '';
+            var statusAtual = v.em_manutencao === true ? 'manutencao' : (v.disponivel === false ? 'alugado' : 'disponivel');
+            document.getElementById('editVStatus').value = statusAtual;
+            document.getElementById('editVValor').value = v.valor_diaria != null ? v.valor_diaria : '';
+            document.getElementById('editVKm').value = v.quilometragem != null ? v.quilometragem : '';
+            editFotosArray = getFotosVeiculo(v).slice();
+            document.getElementById('editVFoto').value = '';
+            var editFile = document.getElementById('editVFotoFile');
+            if (editFile) editFile.value = '';
+            renderEditFotos();
+            document.getElementById('modalEditarVeiculo').classList.add('ativo');
+        }
+
+        function fecharModalEditarVeiculo() {
+            document.getElementById('modalEditarVeiculo').classList.remove('ativo');
+            editVeiculoId = null;
+        }
+
+        async function salvarEdicaoVeiculo() {
+            if (editVeiculoId == null) return;
+            var veiculos = getVeiculos().slice();
+            var v = veiculos.find(function(x) { return x.id === editVeiculoId; });
+            if (!v) { fecharModalEditarVeiculo(); return; }
+            var valorStr = document.getElementById('editVValor').value.trim().replace(',', '.');
+            var kmStr = document.getElementById('editVKm').value.trim().replace(',', '.');
+            var valor_diaria = valorStr === '' ? v.valor_diaria : parseFloat(valorStr);
+            var quilometragem = kmStr === '' ? v.quilometragem : parseFloat(kmStr);
+            if (valorStr !== '' && isNaN(valor_diaria)) { toast('Valor da diária inválido.', 'error'); return; }
+            if (kmStr !== '' && isNaN(quilometragem)) { toast('Quilometragem inválida.', 'error'); return; }
+            var statusEdit = document.getElementById('editVStatus').value;
+            var disponivel = statusEdit === 'disponivel';
+            var em_manutencao = statusEdit === 'manutencao';
+            v.valor_diaria = valor_diaria;
+            v.quilometragem = quilometragem;
+            v.disponivel = disponivel;
+            v.em_manutencao = em_manutencao;
+            v.fotos = editFotosArray.slice(0, 6);
+            if (backendOnline && typeof v.id === 'number') {
+                try {
+                    var r = await fetch(API_BASE + '/veiculos/' + v.id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ valor_diaria: valor_diaria, quilometragem: quilometragem, disponivel: disponivel, fotos: editFotosArray.slice(0, 6) })
+                    });
+                    if (!r.ok) throw new Error('Erro ao atualizar no servidor');
+                } catch (err) {
+                    toast('Veículo atualizado localmente. Erro ao sincronizar com o servidor.', 'error');
+                }
+            }
+            setVeiculos(veiculos);
+            cacheVeiculos = null;
+            renderVeiculos();
+            renderManutencoes();
+            atualizarStats();
+            fecharModalEditarVeiculo();
+            toast(backendOnline && typeof v.id === 'number' ? 'Veículo atualizado no banco de dados.' : 'Veículo atualizado. Dados salvos.');
+        }
+
+        async function deletarVeiculo(id, placa) {
+            const ok = await confirmar('Excluir veículo', 'Deseja realmente excluir o veículo de placa ' + placa + '? Esta ação não pode ser desfeita.');
+            if (!ok) return;
+            setVeiculos(getVeiculos().filter(v => v.id !== id));
+            renderVeiculos(); atualizarStats();
+            toast('Veículo excluído.');
+        }
+
+        function renderClientes() {
+            const clientes = getClientes();
+            const div = document.getElementById('listaClientes');
+            var totalEl = document.getElementById('totalClientesCadastrados');
+            if (totalEl) totalEl.textContent = clientes.length;
+            if (clientes.length === 0) {
+                div.innerHTML = emptyState('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>', 'Nenhum cliente cadastrado. Cadastre o primeiro acima.');
+                return;
+            }
+            let html = '<div class="table-wrap"><table><thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Telefone</th><th>E-mail</th><th>Endereço</th><th>Data cadastro</th><th></th></tr></thead><tbody>';
+            clientes.forEach(c => {
+                var endereco = (c.endereco || '').toString().substring(0, 40);
+                if ((c.endereco || '').length > 40) endereco += '...';
+                var dataCad = c.data_cadastro || '—';
+                html += '<tr><td>' + c.id + '</td><td><strong>' + (c.nome || '') + '</strong></td><td>' + (c.cpf || '') + '</td><td>' + (c.telefone || '') + '</td><td>' + (c.email || '') + '</td><td title="' + (c.endereco || '').replace(/"/g, '&quot;') + '">' + (endereco || '—') + '</td><td>' + dataCad + '</td><td class="linha-acoes"><button type="button" class="btn btn-ghost btn-sm" onclick="visualizarCliente(' + c.id + ')">Ver</button> <button type="button" class="btn btn-ghost btn-sm" onclick="editarCliente(' + c.id + ')">Editar</button></td></tr>';
+            });
+            div.innerHTML = html + '</tbody></table></div>';
+        }
+
+        var clienteVisualizadoId = null;
+        function visualizarCliente(id) {
+            var clientes = getClientes();
+            var c = clientes.find(function(x) { return x.id === id; });
+            if (!c) return;
+            clienteVisualizadoId = id;
+            var dataNasc = c.data_nascimento || '—';
+            if (c.data_nascimento && String(c.data_nascimento).indexOf('-') === -1) dataNasc = c.data_nascimento;
+            else if (c.data_nascimento) try { dataNasc = new Date(c.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR'); } catch (e) {}
+            var html = '<table style="width:100%;border-collapse:collapse;"><tr><td style="padding:0.35rem 0.5rem 0.35rem 0;color:var(--text-muted);">Nome</td><td style="padding:0.35rem 0;">' + (c.nome || '—') + '</td></tr><tr><td style="padding:0.35rem 0.5rem 0.35rem 0;color:var(--text-muted);">CPF</td><td>' + (c.cpf || '—') + '</td></tr><tr><td style="padding:0.35rem 0.5rem 0.35rem 0;color:var(--text-muted);">Telefone</td><td>' + (c.telefone || '—') + '</td></tr><tr><td style="padding:0.35rem 0.5rem 0.35rem 0;color:var(--text-muted);">E-mail</td><td>' + (c.email || '—') + '</td></tr><tr><td style="padding:0.35rem 0.5rem 0.35rem 0;color:var(--text-muted);">Data nasc.</td><td>' + dataNasc + '</td></tr><tr><td style="padding:0.35rem 0.5rem 0.35rem 0;color:var(--text-muted);">CEP</td><td>' + (c.cep || '—') + '</td></tr><tr><td style="padding:0.35rem 0.5rem 0.35rem 0;color:var(--text-muted);">Endereço</td><td>' + (c.endereco || '—') + '</td></tr><tr><td style="padding:0.35rem 0.5rem 0.35rem 0;color:var(--text-muted);">Data cadastro</td><td>' + (c.data_cadastro || '—') + '</td></tr></table>';
+            document.getElementById('modalVerClienteConteudo').innerHTML = html;
+            document.getElementById('modalVerCliente').classList.add('ativo');
+        }
+        document.getElementById('modalVerClienteFechar').addEventListener('click', function() { document.getElementById('modalVerCliente').classList.remove('ativo'); clienteVisualizadoId = null; });
+        document.getElementById('modalVerCliente').addEventListener('click', function(e) { if (e.target === document.getElementById('modalVerCliente')) document.getElementById('modalVerCliente').classList.remove('ativo'); });
+        document.getElementById('modalVerClienteEditar').addEventListener('click', function() { document.getElementById('modalVerCliente').classList.remove('ativo'); if (clienteVisualizadoId !== null) editarCliente(clienteVisualizadoId); clienteVisualizadoId = null; });
+
+        document.getElementById('btnImportarVeiculos').addEventListener('click', async function() {
+            if (!backendOnline) { toast('Conecte a API para importar do banco.', 'warning'); return; }
+            setBackendStatus('loading', 'Importando veículos...');
+            var ok = await carregarVeiculosDoBackend();
+            setBackendStatus(ok ? 'online' : 'offline', ok ? 'Backend conectado' : 'Dados locais');
+            renderVeiculos(); renderManutencoes(); atualizarStats();
+            toast(ok ? 'Veículos do banco importados e exibidos na Frota.' : 'Falha ao importar. Verifique a API.');
+        });
+        document.getElementById('btnImportarClientes').addEventListener('click', async function() {
+            if (!backendOnline) { toast('Conecte a API para importar do banco.', 'warning'); return; }
+            setBackendStatus('loading', 'Importando clientes...');
+            var ok = await carregarClientesDoBackend();
+            setBackendStatus(ok ? 'online' : 'offline', ok ? 'Backend conectado' : 'Dados locais');
+            renderClientes(); atualizarStats();
+            toast(ok ? 'Clientes do banco importados e exibidos na lista.' : 'Falha ao importar. Verifique a API.');
+        });
+
+        document.getElementById('btnAtualizarDados').addEventListener('click', function() { atualizarDadosDoBackend(); });
+
+        function montarEndereco() {
+            var logr = document.getElementById('cLogradouro').value.trim();
+            var num = document.getElementById('cNumero').value.trim();
+            var comp = document.getElementById('cComplemento').value.trim();
+            var bairro = document.getElementById('cBairro').value.trim();
+            var cidade = document.getElementById('cCidade').value.trim();
+            var uf = document.getElementById('cUf').value.trim().toUpperCase();
+            var partes = [];
+            if (logr) partes.push(logr + (num ? ', ' + num : ''));
+            if (comp) partes.push(comp);
+            var linha2 = [bairro, cidade, uf].filter(Boolean).join(', ');
+            if (linha2) partes.push(linha2);
+            return partes.join(' — ');
+        }
+
+        function getDataNascimentoFormatada() {
+            var v = document.getElementById('cDataNasc').value;
+            if (!v) return '';
+            var p = v.split('-');
+            return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : '';
+        }
+
+        document.getElementById('btnAddCliente').addEventListener('click', async function() {
+            const nome = document.getElementById('cNome').value.trim();
+            const cpf = document.getElementById('cCpf').value.trim();
+            const cpfNorm = normalizarCpf(cpf);
+            const telefone = document.getElementById('cTelefone').value.trim();
+            const email = document.getElementById('cEmail').value.trim();
+            const cep = document.getElementById('cCep').value.replace(/\D/g, '');
+            const endereco = montarEndereco();
+            const data_nascimento = getDataNascimentoFormatada();
+
+            if (!nome || !cpf) { toast('Preencha nome e CPF.', 'error'); return; }
+            if (cpfNorm.length < 11) { toast('CPF deve ter 11 dígitos.', 'error'); return; }
+
+            var clientes = getClientes();
+            if (clientes.some(function(c) { return normalizarCpf(c.cpf) === cpfNorm; })) {
+                toast('Já existe cliente com este CPF.', 'error');
+                return;
+            }
+
+            if (backendOnline) {
+                try {
+                    var body = {
+                        nome: nome,
+                        cpf: cpfNorm,
+                        telefone: telefone || '',
+                        email: email || '',
+                        cep: cep || '',
+                        endereco: endereco || ''
+                    };
+                    if (data_nascimento) body.data_nascimento = data_nascimento;
+                    var r = await fetch(API_BASE + '/clientes/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    if (r.ok) {
+                        await carregarClientesDoBackend();
+                        renderClientes();
+                        atualizarStats();
+                        ['cNome','cCpf','cTelefone','cEmail','cCep','cLogradouro','cNumero','cComplemento','cBairro','cCidade','cUf','cDataNasc'].forEach(function(id) { document.getElementById(id).value = ''; });
+                        document.getElementById('statusCep').textContent = '';
+                        document.getElementById('statusCep').className = 'status-cep';
+                        toast('Cliente cadastrado no servidor. Dados salvos.');
+                        return;
+                    }
+                    var err = await r.json().catch(function() { return {}; });
+                    toast(err.detail || 'Erro ao cadastrar no servidor. Salvando localmente.', 'warning');
+                } catch (e) {
+                    toast('Servidor indisponível. Salvando localmente.', 'warning');
+                }
+            }
+
+            clientes = getClientes().slice();
+            var novoId = clientes.length ? Math.max.apply(null, clientes.map(function(c) { return c.id; })) + 1 : 1;
+            var dataCadastroStr = new Date().toISOString().split('T')[0];
+            try { dataCadastroStr = new Date().toLocaleDateString('pt-BR'); } catch (e) {}
+            clientes.push({
+                id: novoId,
+                nome: nome,
+                cpf: cpfNorm,
+                telefone: telefone,
+                email: email,
+                cep: cep,
+                endereco: endereco,
+                data_nascimento: data_nascimento,
+                data_cadastro: dataCadastroStr
+            });
+            setClientes(clientes);
+            cacheClientes = null;
+            ['cNome','cCpf','cTelefone','cEmail','cCep','cLogradouro','cNumero','cComplemento','cBairro','cCidade','cUf','cDataNasc'].forEach(function(id) { document.getElementById(id).value = ''; });
+            document.getElementById('statusCep').textContent = '';
+            document.getElementById('statusCep').className = 'status-cep';
+            renderClientes();
+            atualizarStats();
+            toast('Cliente cadastrado. Dados salvos.');
+        });
+
+        function editarCliente(id) {
+            const clientes = getClientes();
+            const c = clientes.find(x => x.id === id);
+            if (!c) return;
+            const nome = prompt('Nome:', c.nome); if (nome !== null) c.nome = nome.trim() || c.nome;
+            const tel = prompt('Telefone:', c.telefone); if (tel !== null) c.telefone = tel.trim();
+            const email = prompt('E-mail:', c.email); if (email !== null) c.email = email.trim();
+            setClientes(clientes); renderClientes();
+            toast('Cliente atualizado.');
+        }
+
+        function renderFormasPagamento() {
+            const formas = getFormasPagamento();
+            const div = document.getElementById('listaFormasPagamento');
+            if (formas.length === 0) {
+                div.innerHTML = emptyState('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>', 'Nenhuma forma de pagamento. Adicione PIX, Cartão, Dinheiro etc.');
+                return;
+            }
+            let html = '<div class="table-wrap"><table><thead><tr><th>ID</th><th>Nome</th><th>Descrição</th><th>Status</th><th></th></tr></thead><tbody>';
+            formas.forEach(f => {
+                const status = f.ativa ? '<span class="badge badge-success">Ativa</span>' : '<span class="badge badge-muted">Inativa</span>';
+                html += '<tr><td>' + f.id + '</td><td><strong>' + f.nome + '</strong></td><td>' + (f.descricao || '—') + '</td><td>' + status + '</td><td class="linha-acoes"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleFormaPagamento(' + f.id + ')">' + (f.ativa ? 'Desativar' : 'Ativar') + '</button></td></tr>';
+            });
+            div.innerHTML = html + '</tbody></table></div>';
+        }
+
+        document.getElementById('btnAddFormaPagamento').addEventListener('click', async () => {
+            const nome = document.getElementById('fpNome').value.trim();
+            const descricao = document.getElementById('fpDesc').value.trim();
+            if (!nome) { toast('Informe o nome da forma de pagamento.', 'error'); return; }
+            const formas = getFormasPagamento();
+            if (formas.some(f => f.nome.toLowerCase() === nome.toLowerCase())) { toast('Forma de pagamento já existe.', 'error'); return; }
+            if (backendOnline) {
+                try {
+                    const r = await fetch(API_BASE + '/formas-pagamento/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ nome, descricao: descricao || null, ativa: true })
+                    });
+                    if (r.ok) {
+                        await carregarFormasPagamentoDoBackend();
+                        document.getElementById('fpNome').value = ''; document.getElementById('fpDesc').value = '';
+                        renderFormasPagamento(); atualizarSelectFormasPagamento();
+                        toast('Forma de pagamento adicionada.');
+                        return;
+                    }
+                    const err = await r.json().catch(() => ({}));
+                    toast(err.detail || 'Erro ao adicionar.', 'error');
+                    return;
+                } catch (e) { toast('Erro de conexão com o backend.', 'error'); return; }
+            }
+            const id = nextId(STORAGE.nextIdForma);
+            formas.push({ id, nome, descricao, ativa: true });
+            setFormasPagamento(formas);
+            document.getElementById('fpNome').value = ''; document.getElementById('fpDesc').value = '';
+            renderFormasPagamento(); atualizarSelectFormasPagamento();
+            toast('Forma de pagamento adicionada.');
+        });
+
+        async function toggleFormaPagamento(id) {
+            const formas = getFormasPagamento();
+            const f = formas.find(x => x.id == id);
+            if (!f) return;
+            const novaAtiva = !f.ativa;
+            if (backendOnline) {
+                try {
+                    const r = await fetch(API_BASE + '/formas-pagamento/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ ativa: novaAtiva })
+                    });
+                    if (r.ok) {
+                        await carregarFormasPagamentoDoBackend();
+                        renderFormasPagamento();
+                        atualizarSelectFormasPagamento();
+                        toast(novaAtiva ? 'Forma ativada.' : 'Forma desativada.');
+                        return;
+                    }
+                    toast('Erro ao atualizar no backend.', 'error');
+                    return;
+                } catch (e) { toast('Erro de conexão.', 'error'); return; }
+            }
+            f.ativa = novaAtiva;
+            setFormasPagamento(formas);
+            renderFormasPagamento();
+            atualizarSelectFormasPagamento();
+            toast(f.ativa ? 'Forma ativada.' : 'Forma desativada.');
+        }
+
+        function atualizarSelectFormasPagamento() {
+            const sel = document.getElementById('pagForma');
+            const formas = getFormasPagamento().filter(f => f.ativa);
+            sel.innerHTML = '<option value="">Selecione a forma de pagamento</option>' + formas.map(f => '<option value="' + f.id + '">' + f.nome + '</option>').join('');
+        }
+
+        function getPagamentosByLocacao() {
+            const pagamentos = getPagamentos();
+            const byLoc = {};
+            pagamentos.forEach(p => {
+                if (!byLoc[p.id_locacao]) byLoc[p.id_locacao] = [];
+                byLoc[p.id_locacao].push(p);
+            });
+            return byLoc;
+        }
+
+        document.getElementById('btnCriarLocacao').addEventListener('click', async () => {
+            const cpf = normalizarCpf(document.getElementById('locCpf').value);
+            const placa = document.getElementById('locPlaca').value.trim().toUpperCase();
+            const dias = parseInt(document.getElementById('locDias').value, 10);
+            const observacoes = document.getElementById('locObservacoes').value.trim();
+            const clientes = getClientes();
+            const veiculos = getVeiculos();
+            const cliente = clientes.find(c => normalizarCpf(c.cpf) === cpf);
+            const veiculo = veiculos.find(v => v.placa === placa);
+            if (!cliente) { toast('Cliente não encontrado.', 'error'); return; }
+            if (!veiculo) { toast('Veículo não encontrado.', 'error'); return; }
+            if (veiculo.em_manutencao) { toast('Veículo está em manutenção.', 'error'); return; }
+            if (!veiculo.disponivel || getIdsVeiculosAlugados().has(veiculo.id)) { toast('Veículo não está disponível (já alugado).', 'error'); return; }
+            if (!dias || dias < 1) { toast('Informe um número de dias válido.', 'error'); return; }
+            if (backendOnline) {
+                try {
+                    var r = await fetch(API_BASE + '/locacoes/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ id_cliente: cliente.id, id_veiculo: veiculo.id, dias: dias, observacoes: observacoes || null }) });
+                    if (r.ok) { await carregarLocacoesDoBackend(); document.getElementById('locCpf').value = ''; document.getElementById('locPlaca').value = ''; document.getElementById('locDias').value = ''; document.getElementById('locObservacoes').value = ''; renderVeiculos(); renderLocacoes(); atualizarStats(); toast('Locação criada no servidor.'); return; }
+                    var err = await r.json().catch(function() { return {}; }); toast(err.detail || 'Erro ao criar locação no servidor.', 'warning');
+                } catch (e) { toast('Servidor indisponível. Salvando localmente.', 'warning'); }
+            }
+            const data_inicio = new Date();
+            const data_fim = new Date(data_inicio);
+            data_fim.setDate(data_fim.getDate() + dias);
+            const valor_total = dias * veiculo.valor_diaria;
+            const id = nextId(STORAGE.nextIdLocacao);
+            const locacoes = getLocacoes();
+            locacoes.push({ id, id_cliente: cliente.id, id_veiculo: veiculo.id, cliente, veiculo, data_inicio: data_inicio.toISOString(), data_fim: data_fim.toISOString(), dias, valor_total, multa_atraso: 0, ativa: true, observacoes: observacoes || '' });
+            setLocacoes(locacoes);
+            veiculo.disponivel = false;
+            setVeiculos(veiculos);
+            document.getElementById('locCpf').value = ''; document.getElementById('locPlaca').value = ''; document.getElementById('locDias').value = ''; document.getElementById('locObservacoes').value = '';
+            renderVeiculos(); renderLocacoes(); atualizarStats();
+            toast('Locação criada. Dados salvos.');
+        });
+
+        function renderLocacoes() {
+            const locacoes = getLocacoes();
+            const pagamentosByLoc = getPagamentosByLocacao();
+            const ativas = locacoes.filter(l => l.ativa);
+            const divAtivas = document.getElementById('listaLocacoesAtivas');
+            if (ativas.length === 0) {
+                divAtivas.innerHTML = emptyState('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', 'Nenhuma locação ativa no momento.');
+            } else {
+                let html = '<div class="table-wrap"><table><thead><tr><th>ID</th><th>Cliente</th><th>Veículo</th><th>Dias</th><th>Período</th><th>Total</th><th>Multa</th><th>Pago / Pendente</th><th>Observações</th><th></th></tr></thead><tbody>';
+                ativas.forEach(l => {
+                    const pagos = (pagamentosByLoc[l.id] || []).reduce((s, p) => s + p.valor_pagamento, 0);
+                    const pendente = l.valor_total - pagos;
+                    const di = new Date(l.data_inicio).toLocaleDateString('pt-BR');
+                    const df = new Date(l.data_fim).toLocaleDateString('pt-BR');
+                    const obs = (l.observacoes || '').toString().substring(0, 25);
+                    const obsFull = (l.observacoes || '').replace(/"/g, '&quot;');
+                    html += '<tr><td>' + l.id + '</td><td>' + (l.cliente && l.cliente.nome ? l.cliente.nome : '') + '</td><td>' + (l.veiculo ? l.veiculo.marca + ' ' + l.veiculo.modelo : '') + '</td><td>' + (l.dias != null ? l.dias : '—') + '</td><td>' + di + ' a ' + df + '</td><td>R$ ' + Number(l.valor_total).toFixed(2).replace('.', ',') + '</td><td>R$ ' + Number(l.multa_atraso || 0).toFixed(2).replace('.', ',') + '</td><td>R$ ' + pagos.toFixed(2).replace('.', ',') + ' / R$ ' + pendente.toFixed(2).replace('.', ',') + '</td><td title="' + obsFull + '">' + (obs ? obs + (obs.length >= 25 ? '...' : '') : '—') + '</td><td class="linha-acoes"><button type="button" class="btn btn-danger btn-sm" onclick="finalizarLocacao(' + l.id + ')">Finalizar</button></td></tr>';
+                });
+                divAtivas.innerHTML = html + '</tbody></table></div>';
+            }
+            const historico = document.getElementById('historicoLocacoes');
+            const todas = locacoes.slice().sort((a, b) => new Date(b.data_inicio) - new Date(a.data_inicio));
+            if (todas.length === 0) {
+                historico.innerHTML = emptyState('<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>', 'Nenhuma locação no histórico.');
+            } else {
+                let html = '<div class="table-wrap"><table><thead><tr><th>ID</th><th>Cliente</th><th>Veículo</th><th>Dias</th><th>Total</th><th>Multa</th><th>Observações</th><th>Status</th></tr></thead><tbody>';
+                todas.forEach(l => {
+                    const status = l.ativa ? '<span class="badge badge-success">Ativa</span>' : '<span class="badge badge-muted">Finalizada</span>';
+                    const obs = (l.observacoes || '').toString().substring(0, 20);
+                    html += '<tr><td>' + l.id + '</td><td>' + (l.cliente && l.cliente.nome ? l.cliente.nome : '') + '</td><td>' + (l.veiculo ? l.veiculo.marca + ' ' + l.veiculo.modelo : '') + '</td><td>' + (l.dias != null ? l.dias : '—') + '</td><td>R$ ' + Number(l.valor_total).toFixed(2).replace('.', ',') + '</td><td>R$ ' + Number(l.multa_atraso || 0).toFixed(2).replace('.', ',') + '</td><td>' + (obs ? obs + (obs.length >= 20 ? '...' : '') : '—') + '</td><td>' + status + '</td></tr>';
+                });
+                historico.innerHTML = html + '</tbody></table></div>';
+            }
+            renderPagamentosRegistrados();
+        }
+
+        function renderPagamentosRegistrados() {
+            var div = document.getElementById('listaPagamentosRegistrados');
+            if (!div) return;
+            var pagamentos = getPagamentos();
+            var formas = getFormasPagamento();
+            if (pagamentos.length === 0) {
+                div.innerHTML = '<p class="vazio">Nenhum pagamento registrado.</p>';
+                return;
+            }
+            var html = '<div class="table-wrap"><table><thead><tr><th>ID Locação</th><th>Data pagamento</th><th>Forma</th><th>Valor (R$)</th><th>Comprovante</th><th>Observações</th></tr></thead><tbody>';
+            pagamentos.slice().sort(function(a, b) { return new Date(b.data_pagamento) - new Date(a.data_pagamento); }).forEach(function(p) {
+                var formaNome = (formas.find(function(f) { return String(f.id) === String(p.id_forma_pagamento); }) || {}).nome || '—';
+                var dataPag = '';
+                try { dataPag = new Date(p.data_pagamento).toLocaleString('pt-BR'); } catch (e) { dataPag = p.data_pagamento || '—'; }
+                html += '<tr><td>' + p.id_locacao + '</td><td>' + dataPag + '</td><td>' + formaNome + '</td><td>R$ ' + Number(p.valor_pagamento).toFixed(2).replace('.', ',') + '</td><td>' + (p.numero_comprovante || '—') + '</td><td>' + (p.observacoes || '—') + '</td></tr>';
+            });
+            div.innerHTML = html + '</tbody></table></div>';
+        }
+
+        function finalizarLocacao(idLoc) {
+            const locacoes = getLocacoes();
+            const loc = locacoes.find(l => l.id === idLoc);
+            if (!loc || !loc.ativa) { toast('Locação não encontrada ou já finalizada.', 'error'); return; }
+            if (backendOnline) {
+                fetch(API_BASE + '/locacoes/' + idLoc + '/finalizar', { method: 'POST', headers: { 'Accept': 'application/json' } }).then(async function(r) { if (r.ok) { await carregarLocacoesDoBackend(); renderVeiculos(); renderLocacoes(); atualizarStats(); toast('Locação finalizada no servidor.'); } else { toast('Erro ao finalizar no servidor.', 'error'); } }).catch(function() { toast('Servidor indisponível.', 'error'); });
+                return;
+            }
+            loc.ativa = false;
+            const veiculos = getVeiculos();
+            const v = veiculos.find(x => x.id === loc.id_veiculo);
+            if (v) v.disponivel = true;
+            setLocacoes(locacoes);
+            setVeiculos(veiculos);
+            renderLocacoes();
+            renderVeiculos();
+            atualizarStats();
+            toast('Locação finalizada. Dados salvos.');
+        }
+
+        document.getElementById('btnRegistrarPagamento').addEventListener('click', async () => {
+            const id_locacao = parseInt(document.getElementById('pagIdLoc').value, 10);
+            const idForma = document.getElementById('pagForma').value;
+            const valor = parseFloat(String(document.getElementById('pagValor').value).replace(',', '.')) || 0;
+            const comprovante = document.getElementById('pagComprovante').value.trim();
+            const observacoesPag = document.getElementById('pagObservacoes').value.trim();
+            const locacoes = getLocacoes();
+            const pagamentos = getPagamentos();
+            const loc = locacoes.find(l => l.id === id_locacao);
+            if (!loc) { toast('Locação não encontrada.', 'error'); return; }
+            if (!loc.ativa) { toast('Locação já finalizada.', 'error'); return; }
+            const formas = getFormasPagamento();
+            const forma = formas.find(f => String(f.id) === String(idForma) && f.ativa);
+            if (!forma) { toast('Selecione uma forma de pagamento válida.', 'error'); return; }
+            if (valor <= 0) { toast('Valor deve ser maior que zero.', 'error'); return; }
+            const jaPago = pagamentos.filter(p => p.id_locacao === id_locacao).reduce((s, p) => s + p.valor_pagamento, 0);
+            const pendente = loc.valor_total - jaPago;
+            if (valor > pendente) { toast('Valor excede o saldo pendente (R$ ' + pendente.toFixed(2).replace('.', ',') + ').', 'error'); return; }
+            if (backendOnline) {
+                try {
+                    var r = await fetch(API_BASE + '/locacoes/' + id_locacao + '/pagamentos/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ id_forma_pagamento: parseInt(forma.id, 10), valor_pagamento: valor, numero_comprovante: comprovante || null, observacoes: observacoesPag || null }) });
+                    if (r.ok) { await carregarLocacoesDoBackend(); document.getElementById('pagValor').value = ''; document.getElementById('pagComprovante').value = ''; document.getElementById('pagObservacoes').value = ''; renderLocacoes(); toast('Pagamento registrado no servidor.'); return; }
+                    var err = await r.json().catch(function() { return {}; }); toast(err.detail || 'Erro ao registrar pagamento.', 'warning');
+                } catch (e) { toast('Servidor indisponível. Salvando localmente.', 'warning'); }
+            }
+            const id = nextId(STORAGE.nextIdPagamento);
+            pagamentos.push({ id, id_locacao, id_forma_pagamento: forma.id, valor_pagamento: valor, data_pagamento: new Date().toISOString(), numero_comprovante: comprovante, observacoes: observacoesPag || '' });
+            setPagamentos(pagamentos);
+            document.getElementById('pagValor').value = '';
+            document.getElementById('pagComprovante').value = '';
+            document.getElementById('pagObservacoes').value = '';
+            renderLocacoes();
+            toast('Pagamento registrado. Dados salvos.');
+        });
+
+        var chartFinanceiroMensal = null;
+        var cachePlanosConta = [];
+        var cacheLancamentos = [];
+
+        async function carregarControleFinanceiro() {
+            if (!backendOnline) { toast('Conecte a API para usar o Controle Financeiro.', 'warning'); return; }
+            try {
+                var [planosRes, lancamentosRes, dashboardRes] = await Promise.all([
+                    fetch(API_BASE + '/plano-contas/', { headers: { 'Accept': 'application/json' } }),
+                    fetch(API_BASE + '/financeiro?limit=200', { headers: { 'Accept': 'application/json' } }),
+                    fetch(API_BASE + '/financeiro/dashboard/saldo', { headers: { 'Accept': 'application/json' } })
+                ]);
+                cachePlanosConta = planosRes.ok ? await planosRes.json() : [];
+                var tipo = document.getElementById('finFiltroTipo').value;
+                var pago = document.getElementById('finFiltroPago').value;
+                var dataInicio = document.getElementById('finFiltroInicio').value;
+                var dataFim = document.getElementById('finFiltroFim').value;
+                if (lancamentosRes.ok) {
+                    var list = await lancamentosRes.json();
+                    if (tipo) list = list.filter(function(l) { return l.tipo === tipo; });
+                    if (pago !== '') list = list.filter(function(l) { return String(l.pago) === pago; });
+                    if (dataInicio) list = list.filter(function(l) { return l.data_lancamento >= dataInicio; });
+                    if (dataFim) list = list.filter(function(l) { return l.data_lancamento <= dataFim; });
+                    cacheLancamentos = list;
+                } else cacheLancamentos = [];
+                var dashboard = dashboardRes.ok ? await dashboardRes.json() : { saldo: 0, mensal: [] };
+                preencherSelectsFinanceiro();
+                renderPlanoContas();
+                renderLancamentos();
+                renderDashboardFinanceiro(dashboard);
+            } catch (e) { toast('Erro ao carregar controle financeiro.', 'error'); }
+        }
+
+        function preencherSelectsFinanceiro() {
+            var selPlano = document.getElementById('finPlanoConta');
+            var selForma = document.getElementById('finFormaPagamento');
+            var formas = getFormasPagamento().filter(function(f) { return f.ativa; });
+            selPlano.innerHTML = '<option value="">Selecione</option>' + cachePlanosConta.map(function(p) { return '<option value="' + p.id + '">' + (p.nome || '') + '</option>'; }).join('');
+            selForma.innerHTML = '<option value="">Selecione</option>' + formas.map(function(f) { return '<option value="' + f.id + '">' + (f.nome || '') + '</option>'; }).join('');
+            var hoje = new Date().toISOString().split('T')[0];
+            if (!document.getElementById('finData').value) document.getElementById('finData').value = hoje;
+        }
+
+        function renderPlanoContas() {
+            var div = document.getElementById('listaPlanoContas');
+            if (cachePlanosConta.length === 0) { div.innerHTML = '<p class="vazio">Nenhum plano de conta. Adicione acima.</p>'; return; }
+            div.innerHTML = '<table><thead><tr><th>ID</th><th>Nome</th></tr></thead><tbody>' + cachePlanosConta.map(function(p) { return '<tr><td>' + p.id + '</td><td>' + (p.nome || '') + '</td></tr>'; }).join('') + '</tbody></table>';
+        }
+
+        function renderLancamentos() {
+            var div = document.getElementById('listaLancamentos');
+            if (cacheLancamentos.length === 0) { div.innerHTML = '<p class="vazio">Nenhum lançamento.</p>'; return; }
+            var html = '<table><thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Plano</th><th>Forma</th><th>Valor</th><th>Pago</th><th></th></tr></thead><tbody>';
+            cacheLancamentos.forEach(function(l) {
+                var dataStr = l.data_lancamento ? new Date(l.data_lancamento + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+                var valorStr = 'R$ ' + Number(l.valor).toFixed(2).replace('.', ',');
+                if (l.tipo === 'despesa') valorStr = '<span style="color:var(--danger);">-' + valorStr + '</span>';
+                var pagoStr = l.pago ? '<span class="badge badge-success">Sim</span>' : '<span class="badge badge-muted">Não</span>';
+                html += '<tr><td>' + dataStr + '</td><td>' + (l.descricao || '') + '</td><td>' + (l.tipo || '') + '</td><td>' + (l.plano_conta || '—') + '</td><td>' + (l.forma_pagamento || '—') + '</td><td>' + valorStr + '</td><td>' + pagoStr + '</td><td class="linha-acoes"><button type="button" class="btn btn-ghost btn-sm" onclick="togglePagoLancamento(' + l.id + ')">' + (l.pago ? 'Desmarcar' : 'Marcar pago') + '</button> <button type="button" class="btn btn-danger btn-sm" onclick="excluirLancamento(' + l.id + ')">Excluir</button></td></tr>';
+            });
+            div.innerHTML = html + '</tbody></table>';
+        }
+
+        function renderDashboardFinanceiro(dashboard) {
+            var saldo = dashboard.saldo != null ? dashboard.saldo : 0;
+            document.getElementById('finSaldo').textContent = 'R$ ' + saldo.toFixed(2).replace('.', ',');
+            document.getElementById('finSaldo').style.color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
+            var mensal = dashboard.mensal || [];
+            if (typeof Chart !== 'undefined' && document.getElementById('chartFinanceiroMensal')) {
+                if (chartFinanceiroMensal) chartFinanceiroMensal.destroy();
+                var meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                chartFinanceiroMensal = new Chart(document.getElementById('chartFinanceiroMensal'), {
+                    type: 'bar',
+                    data: {
+                        labels: meses,
+                        datasets: [{ label: 'Resultado (R$)', data: mensal.map(function(m) { return m.total; }), backgroundColor: mensal.map(function(m) { return m.total >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)'; }), borderRadius: 4 }]
+                    },
+                    options: Object.assign({}, CHART_OPTS, { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } })
+                });
+            }
+        }
+
+        document.getElementById('btnAddPlanoConta').addEventListener('click', async function() {
+            var nome = document.getElementById('finPlanoNome').value.trim();
+            if (!nome) { toast('Informe o nome da conta.', 'error'); return; }
+            if (!backendOnline) { toast('Conecte a API.', 'error'); return; }
+            try {
+                var r = await fetch(API_BASE + '/plano-contas/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ nome: nome }) });
+                if (r.ok) { document.getElementById('finPlanoNome').value = ''; carregarControleFinanceiro(); toast('Conta adicionada.'); }
+                else { var err = await r.json().catch(function() { return {}; }); toast(err.detail || 'Erro.', 'error'); }
+            } catch (e) { toast('Erro ao conectar.', 'error'); }
+        });
+
+        document.getElementById('btnAddLancamento').addEventListener('click', async function() {
+            var descricao = document.getElementById('finDesc').value.trim();
+            var valor = parseFloat(String(document.getElementById('finValor').value).replace(',', '.')) || 0;
+            var dataLanc = document.getElementById('finData').value;
+            var tipo = document.getElementById('finTipo').value;
+            var planoId = document.getElementById('finPlanoConta').value;
+            var formaId = document.getElementById('finFormaPagamento').value;
+            var pago = document.getElementById('finPago').checked;
+            if (!descricao) { toast('Informe a descrição.', 'error'); return; }
+            if (valor <= 0) { toast('Valor deve ser maior que zero.', 'error'); return; }
+            if (!dataLanc) { toast('Informe a data.', 'error'); return; }
+            if (!planoId || !formaId) { toast('Selecione plano de conta e forma de pagamento.', 'error'); return; }
+            if (!backendOnline) { toast('Conecte a API.', 'error'); return; }
+            try {
+                var r = await fetch(API_BASE + '/financeiro', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ descricao: descricao, valor: valor, data_lancamento: dataLanc, tipo: tipo, plano_conta_id: parseInt(planoId, 10), forma_pagamento_id: parseInt(formaId, 10), pago: pago }) });
+                if (r.ok) { document.getElementById('finDesc').value = ''; document.getElementById('finValor').value = ''; carregarControleFinanceiro(); toast('Lançamento registrado.'); }
+                else { var err = await r.json().catch(function() { return {}; }); toast(err.detail || 'Erro.', 'error'); }
+            } catch (e) { toast('Erro ao conectar.', 'error'); }
+        });
+
+        document.getElementById('btnFiltrarLancamentos').addEventListener('click', function() { carregarControleFinanceiro(); });
+
+        async function togglePagoLancamento(id) {
+            var l = cacheLancamentos.find(function(x) { return x.id === id; });
+            if (!l || !backendOnline) return;
+            var novoPago = !l.pago;
+            try {
+                var r = await fetch(API_BASE + '/financeiro/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ pago: novoPago }) });
+                if (r.ok) { carregarControleFinanceiro(); toast(novoPago ? 'Marcado como pago.' : 'Desmarcado.'); }
+            } catch (e) { toast('Erro.', 'error'); }
+        }
+
+        async function excluirLancamento(id) {
+            if (!confirm('Excluir este lançamento?')) return;
+            if (!backendOnline) return;
+            try {
+                var r = await fetch(API_BASE + '/financeiro/' + id, { method: 'DELETE' });
+                if (r.ok) { carregarControleFinanceiro(); toast('Lançamento excluído.'); }
+                else toast('Erro ao excluir.', 'error');
+            } catch (e) { toast('Erro.', 'error'); }
+        }
+
+        (async function init() {
+            setBackendStatus('loading', 'Conectando ao backend...');
+            var statsOk = await carregarEstatisticasDoBackend();
+            var veiculosOk = await carregarVeiculosDoBackend();
+            var clientesOk = await carregarClientesDoBackend();
+            var formasOk = await carregarFormasPagamentoDoBackend();
+            var locacoesOk = await carregarLocacoesDoBackend();
+            if (veiculosOk || clientesOk || statsOk || formasOk || locacoesOk) {
+                setBackendStatus('online', 'Backend conectado');
+            } else {
+                setBackendStatus('offline', 'Dados locais');
+                cacheVeiculos = null;
+                cacheClientes = null;
+            }
+            if (!formasOk) {
+                const formas = getFormasPagamento();
+                if (formas.length === 0) {
+                    ['PIX', 'Cartão de crédito', 'Cartão de débito', 'Dinheiro'].forEach((nome, i) => {
+                        formas.push({ id: i + 1, nome, descricao: '', ativa: true });
+                    });
+                    setFormasPagamento(formas);
+                    setNextId(STORAGE.nextIdForma, 5);
+                }
+            }
+            atualizarStats();
+            renderDashboardCharts();
+            renderVeiculos();
+            renderManutencoes();
+            renderClientes();
+            renderFormasPagamento();
+            atualizarSelectFormasPagamento();
+            renderLocacoes();
+            if (!statsOk) atualizarStats();
+            configurarLinksRelatorios();
+        })();
+    </script>
+</body>
+</html>

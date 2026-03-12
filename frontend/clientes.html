@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes</title>
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+  <div class="container">
+    <nav><a href="login.html">Login</a> <a href="dashboard.html">Dashboard</a> <a href="financeiro.html">Financeiro</a> <a href="locacoes.html">Locações</a> <a href="reservas.html">Reservas</a> <a href="clientes.html">Clientes</a> <a href="usuarios.html">Usuários</a> <a href="relatorios.html">Relatórios</a></nav>
+    <h2>Clientes</h2>
+    <p>Lista de clientes cadastrados.</p>
+    <div id="lista"></div>
+    <div id="erro" class="erro"></div>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/clientes.js"></script>
+  <script>
+    carregarClientes()
+      .then(function (dados) { renderListaClientes(dados); })
+      .catch(function (e) { exibirErroClientes(e.message); });
+  </script>
+</body>
+</html>

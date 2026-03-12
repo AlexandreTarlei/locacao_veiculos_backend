@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservas</title>
+  <link rel="stylesheet" href="css/estilo.css">
+  <style>
+    .form-reserva { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 600px; margin-bottom: 1.5rem; }
+    .form-reserva label { margin-bottom: 0.25rem; }
+    .form-reserva input, .form-reserva select { margin-bottom: 0.5rem; }
+    @media (max-width: 600px) { .form-reserva { grid-template-columns: 1fr; } }
+    .btns-reserva { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="login.html">Login</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="financeiro.html">Financeiro</a>
+      <a href="locacoes.html">Locações</a>
+      <a href="reservas.html">Reservas</a>
+      <a href="clientes.html">Clientes</a>
+      <a href="usuarios.html">Usuários</a>
+      <a href="relatorios.html">Relatórios</a>
+    </nav>
+    <h2>Reservas</h2>
+    <p>Reserve um veículo por período. Verifique a disponibilidade antes de criar.</p>
+
+    <h3>Nova reserva</h3>
+    <form id="formReserva" class="form-reserva">
+      <div>
+        <label for="selCliente">Cliente</label>
+        <select id="selCliente" required>
+          <option value="">Carregando...</option>
+        </select>
+      </div>
+      <div>
+        <label for="selVeiculo">Veículo</label>
+        <select id="selVeiculo" required>
+          <option value="">Carregando...</option>
+        </select>
+      </div>
+      <div>
+        <label for="dataInicio">Data início</label>
+        <input type="date" id="dataInicio" required>
+      </div>
+      <div>
+        <label for="dataFim">Data fim</label>
+        <input type="date" id="dataFim" required>
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <div class="btns-reserva">
+          <button type="button" id="btnDisponibilidade">Verificar disponibilidade</button>
+          <button type="submit">Criar reserva</button>
+        </div>
+        <p id="msgDisponibilidade" class="sucesso" style="margin-top: 0.5rem;"></p>
+      </div>
+    </form>
+    <p id="msgReservas" class="sucesso"></p>
+    <p id="erroReservas" class="erro"></p>
+
+    <h3>Lista de reservas</h3>
+    <div id="listaReservas"></div>
+
+    <div id="painelContrato" style="display: none; margin-top: 1.5rem; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; max-width: 400px;">
+      <h4>Gerar contrato para reserva <span id="contratoReservaId"></span></h4>
+      <p style="margin: 0.5rem 0;">Informe os dias e o valor da diária. O valor total será calculado automaticamente.</p>
+      <form id="formContrato">
+        <input type="hidden" id="contratoReservaIdInput" name="reserva_id">
+        <input type="hidden" id="contratoClienteIdInput" name="cliente_id">
+        <input type="hidden" id="contratoVeiculoIdInput" name="veiculo_id">
+        <label for="contratoDias">Dias</label>
+        <input type="number" id="contratoDias" name="dias" min="1" required placeholder="Ex: 5">
+        <label for="contratoValorDiaria">Valor diária (R$)</label>
+        <input type="number" id="contratoValorDiaria" name="valor_diaria" min="0" step="0.01" required placeholder="Ex: 150.00">
+        <div class="btns-reserva" style="margin-top: 0.75rem;">
+          <button type="submit">Criar contrato</button>
+          <button type="button" id="btnCancelarContrato">Cancelar</button>
+        </div>
+      </form>
+      <p id="msgContrato" class="sucesso" style="margin-top: 0.5rem;"></p>
+    </div>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/reservas.js"></script>
+  <script>
+    (function () {
+      var selCliente = document.getElementById('selCliente');
+      var selVeiculo = document.getElementById('selVeiculo');
+      var dataInicio = document.getElementById('dataInicio');
+      var dataFim = document.getElementById('dataFim');
+      var msgDisp = document.getElementById('msgDisponibilidade');
+      var form = document.getElementById('formReserva');
+      var btnDisp = document.getElementById('btnDisponibilidade');
+
+      function preencherClientes() {
+        carregarClientesParaSelect()
+          .then(function (lista) {
+            selCliente.innerHTML = '<option value="">Selecione o cliente</option>' +
+              (lista || []).map(function (c) { return '<option value="' + c.id + '">' + (c.nome || '') + '</option>'; }).join('');
+          })
+          .catch(function () { selCliente.innerHTML = '<option value="">Erro ao carregar clientes</option>'; });
+      }
+
+      function preencherVeiculos() {
+        carregarVeiculosParaSelect()
+          .then(function (lista) {
+            selVeiculo.innerHTML = '<option value="">Selecione o veículo</option>' +
+              (lista || []).map(function (v) {
+                var desc = (v.placa || '') + ' - ' + (v.marca_nome || v.marca || '') + ' ' + (v.modelo_nome || v.modelo || '');
+                return '<option value="' + v.id + '">' + (desc.trim() || v.id) + '</option>';
+              }).join('');
+          })
+          .catch(function () { selVeiculo.innerHTML = '<option value="">Erro ao carregar veículos</option>'; });
+      }
+
+      function atualizarLista() {
+        carregarReservas()
+          .then(function (dados) { renderListaReservas(dados); })
+          .catch(function (e) { exibirErroReservas(e.message); });
+      }
+
+      btnDisp.addEventListener('click', function () {
+        var veiculoId = selVeiculo.value;
+        var di = dataInicio.value;
+        var df = dataFim.value;
+        msgDisp.textContent = '';
+        if (!veiculoId || !di || !df) {
+          msgDisp.textContent = 'Preencha veículo, data início e data fim.';
+          msgDisp.className = 'erro';
+          return;
+        }
+        if (df < di) {
+          msgDisp.textContent = 'Data fim deve ser >= data início.';
+          msgDisp.className = 'erro';
+          return;
+        }
+        msgDisp.textContent = 'Verificando...';
+        msgDisp.className = '';
+        checarDisponibilidade(parseInt(veiculoId, 10), di, df)
+          .then(function (r) {
+            msgDisp.textContent = r.disponivel ? 'Veículo disponível neste período.' : 'Veículo não disponível neste período (já reservado ou locado).';
+            msgDisp.className = r.disponivel ? 'sucesso' : 'erro';
+          })
+          .catch(function (e) {
+            msgDisp.textContent = e.message || 'Erro ao verificar disponibilidade.';
+            msgDisp.className = 'erro';
+          });
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        exibirErroReservas('');
+        exibirMsgReservas('');
+        var payload = {
+          cliente_id: parseInt(selCliente.value, 10),
+          veiculo_id: parseInt(selVeiculo.value, 10),
+          data_inicio: dataInicio.value,
+          data_fim: dataFim.value
+        };
+        if (!payload.cliente_id || !payload.veiculo_id) {
+          exibirErroReservas('Selecione cliente e veículo.');
+          return;
+        }
+        if (payload.data_fim < payload.data_inicio) {
+          exibirErroReservas('Data fim deve ser >= data início.');
+          return;
+        }
+        criarReserva(payload)
+          .then(function () {
+            exibirMsgReservas('Reserva criada com sucesso.', false);
+            atualizarLista();
+            msgDisp.textContent = '';
+          })
+          .catch(function (err) {
+            exibirErroReservas(err.message || 'Erro ao criar reserva.');
+          });
+      });
+
+      var painelContrato = document.getElementById('painelContrato');
+      var formContrato = document.getElementById('formContrato');
+      var msgContrato = document.getElementById('msgContrato');
+
+      window.onGerarContratoClick = function (dados) {
+        document.getElementById('contratoReservaId').textContent = dados.reserva_id;
+        document.getElementById('contratoReservaIdInput').value = dados.reserva_id;
+        document.getElementById('contratoClienteIdInput').value = dados.cliente_id;
+        document.getElementById('contratoVeiculoIdInput').value = dados.veiculo_id;
+        document.getElementById('contratoDias').value = '';
+        document.getElementById('contratoValorDiaria').value = '';
+        msgContrato.textContent = '';
+        painelContrato.style.display = 'block';
+        carregarVeiculosParaSelect().then(function (veiculos) {
+          var v = (veiculos || []).find(function (x) { return x.id === dados.veiculo_id; });
+          if (v && v.valor_diaria != null) {
+            document.getElementById('contratoValorDiaria').value = Number(v.valor_diaria);
+          }
+        }).catch(function () {});
+      };
+
+      document.getElementById('btnCancelarContrato').addEventListener('click', function () {
+        painelContrato.style.display = 'none';
+      });
+
+      formContrato.addEventListener('submit', function (e) {
+        e.preventDefault();
+        msgContrato.textContent = '';
+        var payload = {
+          reserva_id: parseInt(document.getElementById('contratoReservaIdInput').value, 10),
+          cliente_id: parseInt(document.getElementById('contratoClienteIdInput').value, 10),
+          veiculo_id: parseInt(document.getElementById('contratoVeiculoIdInput').value, 10),
+          valor_diaria: parseFloat(document.getElementById('contratoValorDiaria').value, 10) || 0,
+          dias: parseInt(document.getElementById('contratoDias').value, 10) || 0
+        };
+        criarContrato(payload)
+          .then(function (contrato) {
+            var id = contrato && contrato.id;
+            painelContrato.style.display = 'none';
+            msgContrato.textContent = '';
+            exibirMsgReservas('', false);
+            var msgEl = document.getElementById('msgReservas');
+            if (msgEl) {
+              msgEl.innerHTML = 'Contrato criado com sucesso. ';
+              if (id) {
+                var link = document.createElement('a');
+                link.href = '#';
+                link.textContent = 'Baixar PDF';
+                link.addEventListener('click', function (e) { e.preventDefault(); baixarPdfContrato(id); });
+                msgEl.appendChild(link);
+              } else {
+                msgEl.textContent = 'Contrato criado com sucesso.';
+              }
+              msgEl.className = 'sucesso';
+            }
+          })
+          .catch(function (err) {
+            msgContrato.textContent = err.message || 'Erro ao criar contrato.';
+            msgContrato.className = 'erro';
+          });
+      });
+
+      preencherClientes();
+      preencherVeiculos();
+      atualizarLista();
+    })();
+  </script>
+</body>
+</html>

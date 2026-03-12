@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Reserva (API)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 1.5rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 0.95rem; color: #64748b; font-weight: normal; margin: 0 0 1rem; }
+    label { display: block; margin-bottom: 0.25rem; font-weight: 500; color: #334155; }
+    input { width: 100%; padding: 0.5rem 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 1rem; }
+    button { padding: 0.6rem 1rem; background: #0ea5e9; color: #fff; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    button:hover { background: #0284c7; }
+    .erro { color: #dc2626; font-size: 0.9rem; margin-top: 0.5rem; }
+    .sucesso { color: #059669; font-size: 0.9rem; margin-top: 0.5rem; }
+    a { color: #0ea5e9; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>Nova Reserva</h1>
+  <h2>POST /api/reservas (empresa_id, cliente_id, veiculo_id, data_inicio, data_fim)</h2>
+  <form id="formReserva">
+    <label for="cliente">ID do cliente</label>
+    <input type="number" id="cliente" name="cliente" required min="1" placeholder="Ex: 1">
+    <label for="veiculo">ID do veículo</label>
+    <input type="number" id="veiculo" name="veiculo" required min="1" placeholder="Ex: 1">
+    <label for="inicio">Data início</label>
+    <input type="date" id="inicio" name="inicio" required>
+    <label for="fim">Data fim</label>
+    <input type="date" id="fim" name="fim" required>
+    <button type="submit">Reservar</button>
+  </form>
+  <div id="erro" class="erro"></div>
+  <div id="msg" class="sucesso"></div>
+  <p style="margin-top: 1rem;"><a href="reservas.html">Usar tela completa de reservas</a></p>
+  <script>
+    var API_BASE = (function () {
+      try {
+        var origin = window.location.origin;
+        if (origin && origin !== 'file://') return origin;
+      } catch (e) {}
+      return 'http://localhost:8000';
+    })();
+
+    document.getElementById('formReserva').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var erroEl = document.getElementById('erro');
+      var msgEl = document.getElementById('msg');
+      erroEl.textContent = '';
+      msgEl.textContent = '';
+      var clienteId = parseInt(document.getElementById('cliente').value, 10);
+      var veiculoId = parseInt(document.getElementById('veiculo').value, 10);
+      var dataInicio = document.getElementById('inicio').value;
+      var dataFim = document.getElementById('fim').value;
+      if (isNaN(clienteId) || clienteId < 1) {
+        erroEl.textContent = 'Informe um ID de cliente válido.';
+        return;
+      }
+      if (isNaN(veiculoId) || veiculoId < 1) {
+        erroEl.textContent = 'Informe um ID de veículo válido.';
+        return;
+      }
+      try {
+        var res = await fetch(API_BASE + '/api/reservas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            empresa_id: 1,
+            cliente_id: clienteId,
+            veiculo_id: veiculoId,
+            data_inicio: dataInicio,
+            data_fim: dataFim
+          })
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) {
+          var msg = data.detail || 'Falha ao criar reserva';
+          if (Array.isArray(msg) && msg[0] && msg[0].msg) msg = msg[0].msg;
+          else if (typeof msg !== 'string') msg = 'Falha ao criar reserva';
+          erroEl.textContent = msg;
+          return;
+        }
+        msgEl.textContent = 'Reserva criada.';
+        alert('Reserva criada');
+      } catch (err) {
+        erroEl.textContent = err.message || 'Erro de conexão.';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+    nav { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0; }
+    nav a { margin-right: 1rem; color: #0ea5e9; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    h1 { margin-top: 0; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .card { padding: 1.25rem; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
+    .card h3 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #64748b; }
+    .card .valor { font-size: 1.25rem; font-weight: bold; color: #0f172a; }
+    .erro { color: #dc2626; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="login.html">Sair</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="dashboard-financeiro.html">Dashboard Financeiro</a>
+    <a href="financeiro.html">Financeiro</a>
+    <a href="locacoes.html">Locações</a>
+    <a href="reservas.html">Reservas</a>
+    <a href="clientes.html">Clientes</a>
+    <a href="usuarios.html">Usuários</a>
+    <a href="relatorios.html">Relatórios</a>
+  </nav>
+  <h1>Relatórios</h1>
+  <p>Estatísticas gerais do sistema.</p>
+  <div id="conteudo" class="cards"></div>
+  <div id="erro" class="erro"></div>
+  <script src="js/api.js"></script>
+  <script>
+    function carregar() {
+      Promise.all([
+        getJson('/estatisticas/'),
+        getJson('/contratos/faturamento').catch(function () { return { faturamento: 0 }; })
+      ]).then(function (results) {
+        var data = results[0];
+        var fatContratos = results[1] && results[1].faturamento != null ? results[1].faturamento : 0;
+        var v = data.veiculos || {};
+        var c = data.clientes || {};
+        var l = data.locacoes || {};
+        var f = data.formas_pagamento || {};
+        var p = data.pagamentos || {};
+        document.getElementById('conteudo').innerHTML =
+          '<div class="card"><h3>Veículos</h3><div class="valor">' + (v.total || 0) + ' total</div><div>' + (v.disponivel || 0) + ' disponíveis</div></div>' +
+          '<div class="card"><h3>Clientes</h3><div class="valor">' + (c.total || 0) + '</div></div>' +
+          '<div class="card"><h3>Locações</h3><div class="valor">' + (l.total || 0) + '</div><div>' + (l.ativas || 0) + ' ativas</div></div>' +
+          '<div class="card"><h3>Formas de pagamento</h3><div class="valor">' + (f.total || 0) + '</div></div>' +
+          '<div class="card"><h3>Total pago (locações)</h3><div class="valor">R$ ' + (p.valor_total_pago || 0).toFixed(2) + '</div></div>' +
+          '<div class="card"><h3>Valor total contratado</h3><div class="valor">R$ ' + Number(fatContratos).toFixed(2) + '</div><div style="font-size:0.85rem;color:#64748b;">Soma dos contratos</div></div>';
+      }).catch(function (e) {
+        document.getElementById('erro').textContent = 'Erro: ' + (e && e.message ? e.message : String(e));
+      });
+    }
+    carregar();
+  </script>
+</body>
+</html>

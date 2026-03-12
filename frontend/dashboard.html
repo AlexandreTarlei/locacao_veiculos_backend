@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+    nav { display: flex; align-items: center; flex-wrap: wrap; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0; }
+    nav a { margin-right: 1rem; color: #0ea5e9; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    h1 { margin-top: 0; }
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.5rem; }
+    @media (max-width: 768px) { .cards { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px) { .cards { grid-template-columns: 1fr; } }
+    .card { padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
+    .card h3, .card h5 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #64748b; font-weight: normal; }
+    .card .valor, .card h2 { font-size: 1.25rem; font-weight: bold; color: #0f172a; margin: 0; }
+    .erro { color: #dc2626; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="login.html">Login</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="financeiro.html">Financeiro</a>
+    <a href="locacoes.html">Locações</a>
+    <a href="reservas.html">Reservas</a>
+    <a href="clientes.html">Clientes</a>
+    <a href="usuarios.html">Usuários</a>
+    <a href="relatorios.html">Relatórios</a>
+    <span id="saudacao" style="margin-left: auto; color: #64748b;"></span>
+  </nav>
+  <h1>Dashboard</h1>
+  <p id="subtitulo">Visão geral do sistema.</p>
+  <div id="estatisticas" class="cards"></div>
+  <div id="erro" class="erro"></div>
+  <script src="js/api.js"></script>
+  <script>
+    (function () {
+      try {
+        var u = localStorage.getItem('usuario');
+        if (u) {
+          u = JSON.parse(u);
+          var nome = u.nome || u.email || 'Usuário';
+          var tipo = u.tipo_nome || u.nivel || '';
+          var saudacaoEl = document.getElementById('saudacao');
+          if (saudacaoEl) saudacaoEl.textContent = 'Olá, ' + nome + (tipo ? ' (' + tipo + ')' : '');
+        }
+      } catch (e) {}
+    })();
+    function carregar() {
+      Promise.all([
+        getJson('/estatisticas/'),
+        getJson('/contratos/faturamento').catch(function () { return { faturamento: 0 }; })
+      ]).then(function (results) {
+        var data = results[0];
+        var fatContratos = results[1] && results[1].faturamento != null ? results[1].faturamento : 0;
+        var el = document.getElementById('estatisticas');
+        var v = data.veiculos || {};
+        var l = data.locacoes || {};
+        var receitaMes = data.receita_mes != null ? data.receita_mes : 0;
+        var fmtReceita = 'R$ ' + (typeof receitaMes === 'number' ? receitaMes.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00');
+        var fmtContratos = 'R$ ' + (typeof fatContratos === 'number' ? fatContratos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00');
+        el.innerHTML =
+          '<div class="card"><h5>Veículos disponíveis</h5><h2 id="veiculosDisponiveis" class="valor">' + (v.disponivel ?? 0) + '</h2></div>' +
+          '<div class="card"><h5>Veículos alugados</h5><h2 id="veiculosAlugados" class="valor">' + (v.alugados ?? v.em_uso ?? 0) + '</h2></div>' +
+          '<div class="card"><h5>Receita do mês</h5><h2 id="receitaMes" class="valor">' + fmtReceita + '</h2></div>' +
+          '<div class="card"><h5>Locações ativas</h5><h2 id="locacoesAtivas" class="valor">' + (l.ativas ?? 0) + '</h2></div>' +
+          '<div class="card"><h5>Valor total contratado</h5><h2 id="faturamentoContratos" class="valor">' + fmtContratos + '</h2></div>';
+      }).catch(function (e) {
+        document.getElementById('erro').textContent = 'Erro: ' + (e && e.message ? e.message : String(e));
+      });
+    }
+    carregar();
+  </script>
+</body>
+</html>

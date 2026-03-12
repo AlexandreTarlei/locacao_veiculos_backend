@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
+    .box { background: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.08); width: 100%; max-width: 360px; }
+    h1 { margin: 0 0 1.5rem; font-size: 1.5rem; color: #0f172a; }
+    label { display: block; margin-bottom: 0.25rem; font-weight: 500; color: #334155; }
+    input { width: 100%; padding: 0.6rem 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 1rem; }
+    input:focus { outline: none; border-color: #0ea5e9; box-shadow: 0 0 0 2px rgba(14,165,233,.2); }
+    button { width: 100%; padding: 0.75rem; background: #0ea5e9; color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    button:hover { background: #0284c7; }
+    .erro { color: #dc2626; font-size: 0.9rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Login</h1>
+    <form id="formLogin">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" name="email" required autocomplete="email" placeholder="Email">
+      <label for="password">Senha</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Senha">
+      <button type="submit">Entrar</button>
+    </form>
+    <div id="erro" class="erro"></div>
+  </div>
+  <script>
+    var API_BASE = 'http://localhost:8000';
+    var TOKEN_KEY = 'token';
+
+    document.getElementById('formLogin').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var erroEl = document.getElementById('erro');
+      erroEl.textContent = '';
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      try {
+        var res = await fetch(API_BASE + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: password })
+        });
+        var data = await res.json().catch(function () { return {}; });
+        var msg = data.detail || 'Falha no login';
+        if (Array.isArray(msg) && msg[0] && msg[0].msg) msg = msg[0].msg;
+        else if (typeof msg !== 'string') msg = 'Falha no login';
+        if (!res.ok) throw new Error(msg);
+        localStorage.setItem(TOKEN_KEY, data.access_token);
+        if (data.usuario) localStorage.setItem('usuario', JSON.stringify(data.usuario));
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        erroEl.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

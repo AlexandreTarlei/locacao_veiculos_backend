@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard (API)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 1.5rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 0.95rem; color: #64748b; font-weight: normal; margin: 0 0 1rem; }
+    #faturamento { font-size: 1.25rem; font-weight: bold; color: #0f172a; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
+    .erro { color: #dc2626; margin-top: 1rem; }
+    a { color: #0ea5e9; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard</h1>
+  <h2>GET /api/dashboard/{empresa_id} - Faturamento por contratos</h2>
+  <div id="faturamento">Carregando...</div>
+  <div id="erro" class="erro"></div>
+  <p style="margin-top: 1rem;"><a href="dashboard.html">Dashboard completo</a></p>
+  <script>
+    var API_BASE = (function () {
+      try {
+        var origin = window.location.origin;
+        if (origin && origin !== 'file://') return origin;
+      } catch (e) {}
+      return 'http://localhost:8000';
+    })();
+    var EMPRESA_ID = 1;
+
+    async function carregar() {
+      var fatEl = document.getElementById('faturamento');
+      var erroEl = document.getElementById('erro');
+      erroEl.textContent = '';
+      try {
+        var r = await fetch(API_BASE + '/api/dashboard/' + EMPRESA_ID);
+        var dados = await r.json().catch(function () { return {}; });
+        if (!r.ok) {
+          var msg = dados.detail || 'Falha ao carregar faturamento';
+          if (typeof msg !== 'string') msg = 'Falha ao carregar faturamento';
+          erroEl.textContent = msg;
+          fatEl.textContent = '—';
+          return;
+        }
+        var val = dados.faturamento != null ? Number(dados.faturamento) : 0;
+        fatEl.textContent = 'Faturamento total: R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      } catch (err) {
+        erroEl.textContent = err.message || 'Erro de conexão.';
+        fatEl.textContent = '—';
+      }
+    }
+    carregar();
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🚀 Iniciar API FastAPI",
+            "type": "shell",
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-m",
+                "uvicorn",
+                "api:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": [],
+            "cwd": "${workspaceFolder}",
+            "isBackground": true
+        },
+        {
+            "label": "📦 Instalar Dependências",
+            "type": "shell",
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-m",
+                "pip",
+                "install",
+                "-r",
+                "requirements.txt"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "cwd": "${workspaceFolder}",
+            "problemMatcher": []
+        },
+        {
+            "label": "📚 Abrir Documentação (Swagger)",
+            "type": "shell",
+            "command": "start",
+            "args": [
+                "http://localhost:8000/docs"
+            ],
+            "presentation": {
+                "reveal": "silent"
+            },
+            "windows": {
+                "command": "cmd",
+                "args": [
+                    "/c",
+                    "start http://localhost:8000/docs"
+                ]
+            },
+            "linux": {
+                "command": "xdg-open",
+                "args": [
+                    "http://localhost:8000/docs"
+                ]
+            },
+            "osx": {
+                "command": "open",
+                "args": [
+                    "http://localhost:8000/docs"
+                ]
+            }
+        },
+        {
+            "label": "🔍 Health Check",
+            "type": "shell",
+            "command": "curl",
+            "args": [
+                "http://localhost:8000/health"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "📊 Ver Estatísticas",
+            "type": "shell",
+            "command": "curl",
+            "args": [
+                "http://localhost:8000/estatisticas/"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        }
+    ]
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Financeiro</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+    nav { margin-bottom: 1.5rem; }
+    nav a { margin-right: 1rem; color: #0ea5e9; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    h2 { margin-top: 0; }
+    h3 { font-size: 1.25rem; color: #334155; }
+    #saldo { font-weight: 700; }
+    #saldo.positivo { color: #16a34a; }
+    #saldo.negativo { color: #dc2626; }
+    .chart-container { position: relative; height: 320px; margin-top: 1.5rem; }
+    .erro { color: #dc2626; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="login.html">Login</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="dashboard-financeiro.html">Dashboard Financeiro</a>
+    <a href="financeiro.html">Financeiro</a>
+    <a href="locacoes.html">Locações</a>
+    <a href="relatorios.html">Relatórios</a>
+  </nav>
+
+  <h2>Dashboard Financeiro</h2>
+  <h3>Saldo Atual: R$ <span id="saldo">0,00</span></h3>
+  <div id="erro" class="erro"></div>
+  <div class="chart-container">
+    <canvas id="graficoMensal"></canvas>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    var chartMensal = null;
+
+    function formatarValor(n) {
+      return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    var nomesMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+    function carregar() {
+      var erroEl = document.getElementById('erro');
+      var saldoEl = document.getElementById('saldo');
+      erroEl.textContent = '';
+      getJson('/financeiro/dashboard').then(function (data) {
+        var saldo = data.saldo || 0;
+        saldoEl.textContent = formatarValor(saldo);
+        saldoEl.classList.remove('positivo', 'negativo');
+        saldoEl.classList.add(saldo >= 0 ? 'positivo' : 'negativo');
+
+        var mensal = data.mensal || [];
+        var labels = mensal.map(function (x) { return nomesMes[x.mes - 1]; });
+        var totais = mensal.map(function (x) { return x.total; });
+
+        var ctx = document.getElementById('graficoMensal').getContext('2d');
+        if (chartMensal) chartMensal.destroy();
+        chartMensal = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Saldo mensal (receita - despesa)',
+              data: totais,
+              backgroundColor: totais.map(function (t) { return t >= 0 ? 'rgba(22, 163, 74, 0.7)' : 'rgba(220, 38, 38, 0.7)'; }),
+              borderColor: totais.map(function (t) { return t >= 0 ? '#16a34a' : '#dc2626'; }),
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, ticks: { callback: function (v) { return 'R$ ' + formatarValor(v); } } }
+            },
+            plugins: {
+              legend: { position: 'top' },
+              tooltip: {
+                callbacks: {
+                  label: function (item) { return 'R$ ' + formatarValor(item.raw); }
+                }
+              }
+            }
+          }
+        });
+      }).catch(function (e) {
+        erroEl.textContent = 'Erro ao carregar: ' + (e && e.message ? e.message : String(e));
+        saldoEl.textContent = '0,00';
+      });
+    }
+
+    carregar();
+  </script>
+</body>
+</html>
